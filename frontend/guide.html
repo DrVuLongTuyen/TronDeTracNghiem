@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng dẫn sử dụng - Trộn Đề TN</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <a href="dashboard.html" style="text-decoration: none; margin-bottom: 20px; display: inline-block;">&larr; Quay lại Bảng điều khiển</a>
+
+        <h1>Hướng dẫn sử dụng - Trộn Đề Trắc Nghiệm</h1>
+
+        <h2>Tính năng hiện tại (Giai đoạn 1)</h2>
+        <ul>
+            <li><strong>Xác thực người dùng:</strong> Đăng ký tài khoản, đăng nhập, và xác thực qua email.</li>
+            <li><strong>Upload Đề Gốc:</strong> Tải lên tệp <code>.docx</code> chứa các câu hỏi trắc nghiệm.</li>
+            <li><strong>Phân tích & Lưu trữ:</strong> Hệ thống tự động đọc và lưu câu hỏi vào cơ sở dữ liệu cá nhân của bạn.</li>
+        </ul>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+        <h2>Hướng dẫn sử dụng Ứng dụng Web</h2>
+        
+        <h3>1. Đăng ký tài khoản</h3>
+        <ol>
+            <li>Truy cập <a href="https://trondetn.vltuyen.com" target="_blank">https://trondetn.vltuyen.com</a>.</li>
+            <li>Nhập email của bạn và một mật khẩu.
+                <br><strong>Lưu ý quan trọng:</strong> Mật khẩu phải có <strong>độ dài tối thiểu 6 ký tự</strong>.
+            </li>
+            <li>Nhấn nút <strong>"Đăng ký"</strong>.</li>
+        </ol>
+
+        <h3>2. Xác thực Email</h3>
+        <ol>
+            <li>Sau khi đăng ký, hệ thống sẽ gửi một email xác thực đến địa chỉ bạn đã đăng ký.</li>
+            <li>Mở hộp thư của bạn, tìm email từ "Supabase Auth" (có thể ở trong mục Spam/Quảng cáo).</li>
+            <li>Nhấn vào nút <strong>"Confirm your mail"</strong> trong email.</li>
+            <li>Bạn sẽ được chuyển hướng trở lại trang web, xác nhận rằng tài khoản của bạn đã được kích hoạt.</li>
+        </ol>
+
+        <h3>3. Đăng nhập</h3>
+        <p>Sau khi đã xác thực, bạn có thể đăng nhập bằng email và mật khẩu đã tạo.</p>
+
+        <h3>4. Tải lên Đề Gốc</h3>
+        <ol>
+            <li>Sau khi đăng nhập, bạn sẽ ở trang "Bảng điều khiển".</li>
+            <li>Nhấn nút <strong>"Choose File"</strong> (hoặc "Chọn tệp") và chọn tệp <code>.docx</code> từ máy tính của bạn.</li>
+            <li>Nhấn nút <strong>"Tải lên và xử lý"</strong>.</li>
+            <li>Chờ trong giây lát. Nếu tệp hợp lệ, hệ thống sẽ báo "Xử lý thành công... Đã lưu X câu hỏi."</li>
+        </ol>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+        <h2>Hướng dẫn định dạng tệp Đề Gốc (.docx)</h2>
+        <p style="color: red; font-weight: bold;">Đây là bước QUAN TRỌNG NHẤT. Để hệ thống có thể đọc hiểu tệp, bạn phải tuân thủ CHÍNH XÁC các quy tắc sau:</p>
+
+        <h3>1. Câu hỏi</h3>
+        <ul>
+            <li>Mỗi câu hỏi phải bắt đầu bằng chữ <code>Câu </code> (có dấu cách) và số thứ tự.</li>
+            <li>Ví dụ: <code>Câu 1.</code>, <code>Câu 2:</code>, <code>Câu 10.</code></li>
+        </ul>
+
+        <h3>2. Đáp án</h3>
+        <ul>
+            <li>Các đáp án phải nằm ngay dưới câu hỏi.</li>
+            <li>Các đáp án phải bắt đầu bằng <code>A.</code>, <code>B.</code>, <code>C.</code>, <code>D.</code> (chữ hoa, có dấu chấm).</li>
+        </ul>
+
+        <h3>3. Đáp án đúng (Rất quan trọng)</h3>
+        <ul>
+            <li>Để đánh dấu đâu là đáp án đúng, bạn <strong>BẮT BUỘC</strong> phải dùng tính năng <strong>Gạch chân (Underline)</strong> của Microsoft Word.</li>
+            <li>Bạn có thể chỉ gạch chân chữ cái đầu (ví dụ: <code>A.</code>) hoặc gạch chân cả dòng đáp án.</li>
+        </ul>
+
+        <h3>4. Thẻ Nhóm (Phân loại câu hỏi)</h3>
+        <p>Hệ thống sử dụng các thẻ đặc biệt (viết trên một dòng riêng) để phân loại các nhóm câu hỏi:</p>
+        <ul>
+            <li><code>&lt;g0&gt;</code>: <strong>Nhóm không trộn</strong>. (Ví dụ: Các câu hỏi của bài nghe, đọc hiểu).</li>
+            <li><code>&lt;g1&gt;</code>: <strong>Nhóm chỉ hoán vị câu hỏi</strong>.</li>
+            <li><code>&lt;g2&gt;</code>: <strong>Nhóm chỉ hoán vị đáp án</strong>.</li>
+            <li><code>&lt;g3&gt;</code>: <strong>Nhóm hoán vị cả câu hỏi và đáp án</strong> (phổ biến nhất).</li>
+        </ul>
+        
+        <h3>Ví dụ tệp .docx hợp lệ:</h3>
+        <div style="background-color: #f4f4f4; border-left: 4px solid #007bff; padding: 10px; margin: 10px 0; font-family: monospace; white-space: pre-wrap;">&lt;g3&gt;
+PHẦN I. Câu trắc nghiệm.
+
+Câu 1. Bào quan nào sau đây trực tiếp tham gia quá trình tiêu hóa nội bào?
+A. Ribosome.
+B. Nhân.
+<u>C. Lysosome.</u> (Lưu ý: Dòng này được gạch chân trong Word)
+D. Bộ máy Golgi.
+
+&lt;g1&gt;
+Câu 2. Bào quan nào sau đây là túi chứa sắc tố?
+<u>A. Không bào.</u> (Lưu ý: Dòng này được gạch chân trong Word)
+B. Nhân.
+C. Lysosome.
+</div>
+
+        <h2>Xử lý sự cố (Troubleshooting)</h2>
+        <ul>
+            <li><strong>Lỗi: "Lỗi đăng ký..."</strong>: Mật khẩu của bạn có thể dưới 6 ký tự. Vui lòng thử lại với mật khẩu dài hơn.</li>
+            <li><strong>Đăng nhập không được</strong>: Bạn đã nhấn vào link xác thực trong email chưa? Vui lòng kiểm tra email (cả mục Spam).</li>
+            <li><strong>Upload báo lỗi: "Không tìm thấy câu hỏi..."</strong>: Tệp <code>.docx</code> của bạn đã định dạng sai. Vui lòng kiểm tra lại 6 quy tắc ở trên.</li>
+            <li><strong>Upload báo lỗi: "Lỗi kết nối API: Failed to fetch"</strong>: Có thể máy chủ Backend đang tạm nghỉ. Vui lòng đợi 30 giây và nhấn nút "Tải lên" lại.</li>
+        </ul>
+
+    </div>
+</body>
+</html>
