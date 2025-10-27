@@ -11,12 +11,17 @@
         <div class="header">
             <h1>Kho dữ liệu của bạn</h1>
             <button id="logout-btn">Đăng xuất</button>
+       <div id="upload-section">
+            <h2>Tải lên đề gốc (.docx)</h2>
+            <p>Định dạng theo mẫu (gạch chân đáp án đúng, dùng thẻ &lt;g1&gt;, &lt;g3&gt;...)</p>
+            
+            <p style="font-size: 14px;"><a href="guide.html" target="_blank">Nhấn vào đây để xem hướng dẫn định dạng chi tiết</a></p>
+            
+            <input type="file" id="file-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+            <button id="upload-btn">Tải lên và xử lý</button>
+            <div id="upload-spinner" class="spinner" style="display: none;"></div>
+            <p id="upload-message"></p>
         </div>
-        <p>Xin chào, <span id="user-email"></span>!</p>
-<p>Định dạng theo mẫu (gạch chân đáp án đúng, dùng thẻ &lt;g1&gt;, &lt;g3&gt;...)</p>
-<p style="font-size: 14px;"><a href="guide.html" target="_blank">Nhấn vào đây để xem hướng dẫn định dạng chi tiết</a></p>
-<input type="file" id="file-input" ... >
-        <div id="upload-section">
             <h2>Tải lên đề gốc (.docx)</h2>
             <p>Định dạng theo mẫu (gạch chân đáp án đúng, dùng thẻ &lt;g1&gt;, &lt;g3&gt;...)</p>
             
@@ -33,3 +38,4 @@
 </body>
 
 </html>
+
