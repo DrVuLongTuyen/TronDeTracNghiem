@@ -1,8 +1,8 @@
 // ==================================================================
 // == QUAN TRỌNG: THAY THẾ 2 GIÁ TRỊ DƯỚI ĐÂY (Ở BƯỚC 4.5) ==
 // ==================================================================
-const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Sẽ thay thế ở Bước 4.5
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Sẽ thay thế ở Bước 4.5
+const SUPABASE_URL = 'https://iezcijerbmsgsxilsixo.supabase.co'; // Sẽ thay thế ở Bước 4.5
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllemNpamVyYm1zZ3N4aWxzaXhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NDg5MjAsImV4cCI6MjA3NzEyNDkyMH0.g_VIc4KIpJhKutJ3rBCbKB02gKcjhmaGMsvbG9rjcUk'; // Sẽ thay thế ở Bước 4.5
 
 // GIÁ TRỊ NÀY SẼ ĐƯỢC THAY THẾ SAU KHI DEPLOY BACKEND (Ở BƯỚC 6)
 const API_BASE_URL = 'YOUR_RENDER_API_URL'; 
@@ -10,7 +10,7 @@ const API_BASE_URL = 'YOUR_RENDER_API_URL';
 
 let supabase;
 try {
-    if (SUPABASE_URL.includes('YOUR_SUPABASE_URL')) {
+    if (SUPABASE_URL.includes('https://iezcijerbmsgsxilsixo.supabase.co')) {
         console.warn("app.js: Supabase URL chưa được cấu hình.");
     }
     supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -165,4 +165,5 @@ document.addEventListener('DOMContentLoaded', () => {
             handleFileUpload(file, uploadMessage, uploadBtn, uploadSpinner);
         });
     }
+
 });
