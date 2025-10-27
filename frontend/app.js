@@ -10,7 +10,7 @@ const API_BASE_URL = 'https://trondetn-api.onrender.com';
 
 let supabase;
 try {
-    if (SUPABASE_URL.includes('https://iezcijerbmsgsxilsixo.supabase.co')) {
+    if (SUPABASE_URL.includes('YOUR_SUPABASE_URL')) {
         console.warn("app.js: Supabase URL chưa được cấu hình.");
     }
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -167,5 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
+
 
 
