@@ -76,7 +76,7 @@ async function handleLogout() {
 
 // --- Xử lý Upload ---
 async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
-    if (API_BASE_URL.includes('https://trondetn-api.onrender.com')) {
+    if (API_BASE_URL.includes('YOUR_RENDER_API_URL')) {
          showMessage(msgEl, 'Lỗi: API Backend chưa được cấu hình trong app.js', true);
          return;
     }
@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
+
 
 
 
