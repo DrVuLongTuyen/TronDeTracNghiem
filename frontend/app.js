@@ -5,7 +5,7 @@ const SUPABASE_URL = 'https://iezcijerbmsgsxilsixo.supabase.co'; // Sẽ thay th
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllemNpamVyYm1zZ3N4aWxzaXhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NDg5MjAsImV4cCI6MjA3NzEyNDkyMH0.g_VIc4KIpJhKutJ3rBCbKB02gKcjhmaGMsvbG9rjcUk'; // Sẽ thay thế ở Bước 4.5
 
 // GIÁ TRỊ NÀY SẼ ĐƯỢC THAY THẾ SAU KHI DEPLOY BACKEND (Ở BƯỚC 6)
-const API_BASE_URL = 'YOUR_RENDER_API_URL'; 
+const API_BASE_URL = 'https://trondetn-api.onrender.com'; 
 // ==================================================================
 
 let supabase;
@@ -76,7 +76,7 @@ async function handleLogout() {
 
 // --- Xử lý Upload ---
 async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
-    if (API_BASE_URL.includes('YOUR_RENDER_API_URL')) {
+    if (API_BASE_URL.includes('https://trondetn-api.onrender.com')) {
          showMessage(msgEl, 'Lỗi: API Backend chưa được cấu hình trong app.js', true);
          return;
     }
@@ -167,3 +167,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
+
