@@ -13,7 +13,7 @@ try {
     if (SUPABASE_URL.includes('https://iezcijerbmsgsxilsixo.supabase.co')) {
         console.warn("app.js: Supabase URL chưa được cấu hình.");
     }
-    supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch (error) {
     console.error("Lỗi khởi tạo Supabase:", error.message);
 }
@@ -167,4 +167,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
+
 
