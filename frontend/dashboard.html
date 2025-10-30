@@ -11,7 +11,10 @@
         <div class="header">
             <h1>Kho dữ liệu của bạn</h1>
             <button id="logout-btn">Đăng xuất</button>
-       <div id="upload-section">
+        </div>
+        <p>Xin chào, <span id="user-email"></span>!</p>
+
+        <div id="upload-section">
             <h2>Tải lên đề gốc (.docx)</h2>
             <p>Định dạng theo mẫu (gạch chân đáp án đúng, dùng thẻ &lt;g1&gt;, &lt;g3&gt;...)</p>
             
@@ -22,20 +25,10 @@
             <div id="upload-spinner" class="spinner" style="display: none;"></div>
             <p id="upload-message"></p>
         </div>
-            <h2>Tải lên đề gốc (.docx)</h2>
-            <p>Định dạng theo mẫu (gạch chân đáp án đúng, dùng thẻ &lt;g1&gt;, &lt;g3&gt;...)</p>
-            
-            <input type="file" id="file-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-            <button id="upload-btn">Tải lên và xử lý</button>
-            <div id="upload-spinner" class="spinner" style="display: none;"></div>
-            <p id="upload-message"></p>
-        </div>
 
         </div>
-
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
 </body>
-
 </html>
-
