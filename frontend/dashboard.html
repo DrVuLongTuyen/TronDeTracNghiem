@@ -25,6 +25,34 @@
             <div id="upload-spinner" class="spinner" style="display: none;"></div>
             <p id="upload-message"></p>
         </div>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+
+        <div id="mix-section">
+            <h2>Trộn đề (Tối đa 5 đề)</h2>
+
+            <div class="form-group">
+                <label for="num-tests-input">Bạn muốn trộn thành bao nhiêu đề (2-5):</label>
+                <input type="number" id="num-tests-input" min="2" max="5" value="2">
+            </div>
+
+            <div class="form-group">
+                <label for="base-name-input">Tên tệp tin tải về sẽ là:</label>
+                <input type="text" id="base-name-input" placeholder="VLT" style="width: 80px; text-transform: uppercase;">
+                <span>01 (số thứ tự)</span>
+            </div>
+
+            <p style="font-size: 14px; color: #555;">
+                <i>Ví dụ: Nhập 3 và VLT sẽ tạo ra 3 tệp: Mã_đề_VLT01.docx, Mã_đề_VLT02.docx, v.v.</i>
+            </p>
+
+            <button id="mix-btn">Bắt đầu trộn đề</button>
+
+            <a href="#" id="download-btn" class="button-download" style="display: none;">
+                Tải về (.zip)
+            </a>
+
+            <p id="mix-message"></p>
+        </div>
 
         </div>
     
@@ -32,3 +60,4 @@
     <script src="app.js"></script>
 </body>
 </html>
+
