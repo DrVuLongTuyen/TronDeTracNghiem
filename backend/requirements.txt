@@ -1,5 +1,5 @@
 Flask==2.3.3
 python-docx==1.1.0
-supabase-py==1.0.3
+supabase-client==2.4.0
 flask-cors==4.0.0
 gunicorn==21.2.0
