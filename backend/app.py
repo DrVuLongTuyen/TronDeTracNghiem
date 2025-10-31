@@ -9,6 +9,7 @@ from docx import Document
 from docx.shared import Pt 
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
+import traceback # (MỚI) Thêm thư viện để in lỗi chi tiết
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
@@ -40,7 +41,8 @@ def parse_test_document(file_stream):
 
     group_regex = re.compile(r"<(/?#?g\d+)>")
     question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
-    answer_regex = re.compile(r"^(#?[A-D])[\.:]?\s+", re.IGNORECASE)
+    # (SỬA) Sửa Regex để chấp nhận cả A, B, C, D, E, F... (an toàn hơn)
+    answer_regex = re.compile(r"^(#?[A-Z])[\.:]?\s+", re.IGNORECASE) 
 
     for para in doc.paragraphs:
         text = para.text.strip()
@@ -151,9 +153,8 @@ def handle_clear():
 
     # 2. Xóa dữ liệu
     try:
-        # (SỬA) Sửa lại logic lấy kết quả
         response = supabase.table('question_banks').delete().eq('user_id', user_id).execute()
-        num_deleted = len(response.data) # Lấy độ dài của list data
+        num_deleted = len(response.data) 
         
         return jsonify({"message": f"Đã xóa thành công {num_deleted} câu hỏi cũ."}), 200
         
@@ -209,112 +210,121 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests):
 
 @app.route('/mix', methods=['POST'])
 def handle_mix():
-    # 1. Xác thực người dùng
-    auth_header = request.headers.get('Authorization')
-    if not auth_header: return jsonify({"error": "Thiếu token xác thực"}), 401
-    
+    # (MỚI) Thêm khối TRY...EXCEPT lớn để bắt lỗi
     try:
-        jwt_token = auth_header.split(' ')[1]
-        user_id = supabase.auth.get_user(jwt_token).user.id
-    except Exception as e:
-        return jsonify({"error": f"Token không hợp lệ: {e}"}), 401
+        # 1. Xác thực người dùng
+        auth_header = request.headers.get('Authorization')
+        if not auth_header: return jsonify({"error": "Thiếu token xác thực"}), 401
+        
+        try:
+            jwt_token = auth_header.split(' ')[1]
+            user_id = supabase.auth.get_user(jwt_token).user.id
+        except Exception as e:
+            return jsonify({"error": f"Token không hợp lệ: {e}"}), 401
 
-    # 2. Lấy thông số từ Frontend
-    data = request.json
-    num_tests = int(data.get('num_tests', 2))
-    base_name = data.get('base_name', 'VLT').upper()
-    
-    # 3. Lấy toàn bộ câu hỏi của user từ DB
-    try:
-        response = supabase.table('question_banks').select("*").eq('user_id', user_id).execute()
-        if not response.data:
-            return jsonify({"error": "Không tìm thấy câu hỏi nào trong kho dữ liệu. Vui lòng upload đề trước."}), 404
+        # 2. Lấy thông số từ Frontend
+        data = request.json
+        num_tests = int(data.get('num_tests', 2))
+        base_name = data.get('base_name', 'VLT').upper()
         
-        groups = {}
-        for q in response.data:
-            tag = q['group_tag']
-            if tag not in groups:
-                groups[tag] = []
-            groups[tag].append(q)
+        # 3. Lấy toàn bộ câu hỏi của user từ DB
+        try:
+            response = supabase.table('question_banks').select("*").eq('user_id', user_id).execute()
+            if not response.data:
+                return jsonify({"error": "Không tìm thấy câu hỏi nào trong kho dữ liệu. Vui lòng upload đề trước."}), 404
             
-    except Exception as e:
-        return jsonify({"error": f"Lỗi khi lấy dữ liệu từ DB: {e}"}), 500
-        
-    answer_key_map = {}
-        
-    # 4. Tạo file Zip trong bộ nhớ
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        
-        # 5. Lặp để tạo số lượng đề
-        for i in range(1, num_tests + 1):
-            test_code = f"{base_name}{i:02d}" 
-            answer_key_map[test_code] = [] 
-            
-            doc = Document() 
-            doc.add_heading(f"ĐỀ KIỂM TRA - MÃ ĐỀ: {test_code}", 0)
-            
-            question_counter = 1
-            sorted_group_tags = sorted(groups.keys())
-            
-            for tag in sorted_group_tags:
-                question_list = groups[tag]
+            groups = {}
+            for q in response.data:
+                tag = q['group_tag']
+                if tag not in groups:
+                    groups[tag] = []
+                groups[tag].append(q)
                 
-                if tag in ['g1', 'g3']:
-                    random.shuffle(question_list)
+        except Exception as e:
+            return jsonify({"error": f"Lỗi khi lấy dữ liệu từ DB: {e}"}), 500
+            
+        answer_key_map = {}
+            
+        # 4. Tạo file Zip trong bộ nhớ
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            
+            # 5. Lặp để tạo số lượng đề
+            for i in range(1, num_tests + 1):
+                test_code = f"{base_name}{i:02d}" 
+                answer_key_map[test_code] = [] 
                 
-                for q in question_list:
-                    question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
-                    clean_question_text = question_regex.sub("", q['question_text']).strip()
+                doc = Document() 
+                doc.add_heading(f"ĐỀ KIỂM TRA - MÃ ĐỀ: {test_code}", 0)
+                
+                question_counter = 1
+                sorted_group_tags = sorted(groups.keys())
+                
+                for tag in sorted_group_tags:
+                    question_list = groups[tag]
                     
-                    doc.add_paragraph(f"Câu {question_counter}. {clean_question_text}")
-                    question_counter += 1
+                    if tag in ['g1', 'g3']:
+                        random.shuffle(question_list)
                     
-                    answers = json.loads(q['answers'])
-                    correct_answer_original_prefix = q['correct_answer'] 
-                    
-                    if tag in ['g2', 'g3']:
-                        random.shuffle(answers)
-                    
-                    answer_prefixes = ['A', 'B', 'C', 'D']
-                    
-                    # (MỚI) Thêm một biến cờ
-                    found_correct_answer = False 
-                    
-                    for j, ans in enumerate(answers):
-                        new_prefix = answer_prefixes[j] 
-                        p = doc.add_paragraph(f"{new_prefix}. {ans['text']}")
-                        p.paragraph_format.left_indent = Pt(36) 
+                    for q in question_list:
+                        question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
+                        clean_question_text = question_regex.sub("", q['question_text']).strip()
                         
-                        if ans['prefix'] == correct_answer_original_prefix:
-                            answer_key_map[test_code].append(new_prefix)
-                            found_correct_answer = True # (MỚI) Đặt cờ
+                        doc.add_paragraph(f"Câu {question_counter}. {clean_question_text}")
+                        question_counter += 1
+                        
+                        answers = json.loads(q['answers'])
+                        correct_answer_original_prefix = q['correct_answer'] 
+                        
+                        if tag in ['g2', 'g3']:
+                            random.shuffle(answers)
+                        
+                        answer_prefixes = ['A', 'B', 'C', 'D']
+                        found_correct_answer = False 
+                        
+                        # (MỚI) Thêm [[:4]] để giới hạn chỉ 4 đáp án A,B,C,D
+                        for j, ans in enumerate(answers[:4]):
+                            new_prefix = answer_prefixes[j] 
+                            p = doc.add_paragraph(f"{new_prefix}. {ans['text']}")
+                            p.paragraph_format.left_indent = Pt(36) 
+                            
+                            if ans['prefix'] == correct_answer_original_prefix:
+                                answer_key_map[test_code].append(new_prefix)
+                                found_correct_answer = True 
 
-                    # (MỚI) Nếu không tìm thấy đáp án đúng (do file gốc thiếu gạch chân)
-                    if not found_correct_answer:
-                        answer_key_map[test_code].append('?') # Thêm placeholder
+                        if not found_correct_answer:
+                            answer_key_map[test_code].append('?') 
 
-            doc_buffer = io.BytesIO()
-            doc.save(doc_buffer)
-            doc_buffer.seek(0)
-            
-            file_name = f"Ma_de_{test_code}.docx"
-            zip_file.writestr(file_name, doc_buffer.read())
+                doc_buffer = io.BytesIO()
+                doc.save(doc_buffer)
+                doc_buffer.seek(0)
+                
+                file_name = f"Ma_de_{test_code}.docx"
+                zip_file.writestr(file_name, doc_buffer.read())
 
-        # 6. Tạo tệp đáp án tổng hợp
-        answer_key_buffer = create_answer_key_doc(answer_key_map, base_name, num_tests)
-        zip_file.writestr(f"Dap_an_Tong_hop_{base_name}.docx", answer_key_buffer.read())
+            # 6. Tạo tệp đáp án tổng hợp
+            answer_key_buffer = create_answer_key_doc(answer_key_map, base_name, num_tests)
+            zip_file.writestr(f"Dap_an_Tong_hop_{base_name}.docx", answer_key_buffer.read())
 
-    zip_buffer.seek(0)
-    
-    current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
-    
-    return send_file(
-        zip_buffer,
-        mimetype='application/zip',
-        as_attachment=True,
-        download_name=f'Bo_de_tron_{base_name}_{current_time}.zip' 
-    )
+        zip_buffer.seek(0)
+        
+        current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        return send_file(
+            zip_buffer,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name=f'Bo_de_tron_{base_name}_{current_time}.zip' 
+        )
+        
+    # (MỚI) Bắt lỗi và trả về thông báo
+    except Exception as e:
+        print("--- LỖI NGHIÊM TRỌNG TRONG /MIX ---")
+        print(traceback.format_exc()) # In lỗi chi tiết ra Log của Render
+        print("---------------------------------")
+        # Trả về lỗi 500 cho người dùng
+        return jsonify({"error": f"Lỗi máy chủ nội bộ: {str(e)}. Vui lòng kiểm tra lại file .docx (ví dụ: thiếu đáp án) hoặc liên hệ hỗ trợ."}), 500
+
 
 # Chạy ứng dụng (cho Render)
 if __name__ == '__main__':
