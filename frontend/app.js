@@ -207,6 +207,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadMessage = document.getElementById('upload-message');
     const uploadSpinner = document.getElementById('upload-spinner');
 
+    // (MỚI) Giai đoạn 1.5 - Nút Xóa Kho
+const clearDbBtn = document.getElementById('clear-db-btn');
+    
     // (Giai đoạn 2)
     const mixBtn = document.getElementById('mix-btn');
     const downloadBtn = document.getElementById('download-btn');
@@ -228,6 +231,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // (MỚI) Gán sự kiện cho Giai đoạn 1.5
+if (clearDbBtn) {
+    clearDbBtn.addEventListener('click', () => {
+        // Yêu cầu xác nhận
+        if (!confirm('Bạn có chắc chắn muốn XÓA TOÀN BỘ kho câu hỏi hiện tại không? Hành động này không thể hoàn tác.')) {
+            return;
+        }
+        // Dùng chung ô thông báo với upload
+        handleClearDatabase(uploadMessage, clearDbBtn);
+    });
+}
+    
     // Gán sự kiện cho Giai đoạn 2
     if (mixBtn) {
         mixBtn.addEventListener('click', () => {
@@ -270,3 +285,4 @@ async function handleClearDatabase(msgEl, btnEl) {
         btnEl.disabled = false;
     }
 }
+
