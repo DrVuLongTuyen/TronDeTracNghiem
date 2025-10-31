@@ -182,13 +182,24 @@ async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
         });
 
         if (response.ok) {
+            // --- (MỚI) LẤY TÊN FILE TỪ SERVER ---
+            const contentDisposition = response.headers.get('content-disposition');
+            let downloadName = `Bo_de_tron_${baseName}.zip`; // Tên dự phòng
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                if (filenameMatch && filenameMatch.length > 1) {
+                    downloadName = filenameMatch[1];
+                }
+            }
+            // --- KẾT THÚC SỬA ---
+
             // Nhận file .zip về
             const blob = await response.blob();
             const downloadUrl = URL.createObjectURL(blob);
 
             // Cập nhật link cho nút tải về
             downloadBtnEl.href = downloadUrl;
-            downloadBtnEl.download = `Bo_${numTests}_de_tron_${baseName}.zip`;
+            downloadBtnEl.download = downloadName; // (SỬA) Dùng tên file động
             
             // Hiển thị nút tải về
             downloadBtnEl.style.display = 'inline-block';
@@ -285,4 +296,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
