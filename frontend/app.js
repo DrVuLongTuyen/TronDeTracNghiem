@@ -1,11 +1,9 @@
 // ==================================================================
-// == QUAN TRỌNG: THAY THẾ 2 GIÁ TRỊ DƯỚI ĐÂY (Ở BƯỚC 4.5) ==
+// == CẤU HÌNH SUPABASE VÀ API (ĐÃ LÀM Ở GIAI ĐOẠN 1) ==
 // ==================================================================
-const SUPABASE_URL = 'https://iezcijerbmsgsxilsixo.supabase.co'; // Sẽ thay thế ở Bước 4.5
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllemNpamVyYm1zZ3N4aWxzaXhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NDg5MjAsImV4cCI6MjA3NzEyNDkyMH0.g_VIc4KIpJhKutJ3rBCbKB02gKcjhmaGMsvbG9rjcUk'; // Sẽ thay thế ở Bước 4.5
-
-// GIÁ TRỊ NÀY SẼ ĐƯỢC THAY THẾ SAU KHI DEPLOY BACKEND (Ở BƯỚC 6)
-const API_BASE_URL = 'https://trondetn-api.onrender.com'; 
+const SUPABASE_URL = 'https://iezcijerbmsgsxilsixo.supabase.co'; // Giữ nguyên URL của bạn
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlleGNpamllemJtc2dzeGlsc2l4byIsIm9sZSI6ImFub24iLCJpYXQiOjE3MjkzODIzODMsImV4cCI6MjA0NDk1ODM4M30.zMv_s09Rk_nK-X-sS8oYhDo-MvyOVP0Eafk-X5F0mIY'; // Giữ nguyên Key ANNON của bạn
+const API_BASE_URL = 'https://trondetn-api.onrender.com'; // Giữ nguyên URL API Render của bạn
 // ==================================================================
 
 let supabase;
@@ -74,7 +72,7 @@ async function handleLogout() {
     else window.location.href = 'index.html';
 }
 
-// --- Xử lý Upload ---
+// --- Xử lý Upload (Giai đoạn 1) ---
 async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
     if (API_BASE_URL.includes('YOUR_RENDER_API_URL')) {
          showMessage(msgEl, 'Lỗi: API Backend chưa được cấu hình trong app.js', true);
@@ -98,9 +96,7 @@ async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
     try {
         const response = await fetch(`${API_BASE_URL}/upload`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${session.access_token}`
-            },
+            headers: { 'Authorization': `Bearer ${session.access_token}` },
             body: formData
         });
 
@@ -117,9 +113,66 @@ async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
     } finally {
         btnEl.disabled = false;
         spinnerEl.style.display = 'none';
-        document.getElementById('file-input').value = ''; // Xóa tệp đã chọn
+        document.getElementById('file-input').value = '';
     }
 }
+
+// --- (MỚI) Xử lý Trộn đề (Giai đoạn 2) ---
+async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
+    const numTests = document.getElementById('num-tests-input').value;
+    const baseName = document.getElementById('base-name-input').value || 'VLT';
+
+    // Lấy token
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        showMessage(msgEl, 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', true);
+        return;
+    }
+
+    showMessage(msgEl, 'Đang trộn đề... Việc này có thể mất một phút...', false);
+    btnEl.disabled = true;
+    downloadBtnEl.style.display = 'none'; // Ẩn nút tải về cũ
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/mix`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                num_tests: numTests,
+                base_name: baseName
+            })
+        });
+
+        if (response.ok) {
+            // Nhận file .zip về
+            const blob = await response.blob();
+            const downloadUrl = URL.createObjectURL(blob);
+
+            // Cập nhật link cho nút tải về
+            downloadBtnEl.href = downloadUrl;
+            downloadBtnEl.download = `Bo_${numTests}_de_tron_${baseName}.zip`;
+
+            // Hiển thị nút tải về
+            downloadBtnEl.style.display = 'inline-block';
+            showMessage(msgEl, `Đã trộn xong ${numTests} đề! Nhấn nút 'Tải về' để lưu.`, false);
+
+        } else {
+            // Xử lý lỗi từ server (ví dụ: không có câu hỏi)
+            const result = await response.json();
+            showMessage(msgEl, `Lỗi: ${result.error || 'Lỗi không xác định từ server'}`, true);
+        }
+
+    } catch (error) {
+        // Xử lý lỗi mạng (như API "ngủ")
+        showMessage(msgEl, `Lỗi kết nối API: ${error.message}. Vui lòng đợi 30 giây và thử lại.`, true);
+    } finally {
+        btnEl.disabled = false; // Kích hoạt lại nút "Bắt đầu trộn"
+    }
+}
+
 
 // --- Gán sự kiện khi DOM tải xong ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -147,14 +200,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Trang Dashboard (dashboard.html) ---
     const logoutBtn = document.getElementById('logout-btn');
+
+    // (Giai đoạn 1)
     const uploadBtn = document.getElementById('upload-btn');
     const fileInput = document.getElementById('file-input');
     const uploadMessage = document.getElementById('upload-message');
     const uploadSpinner = document.getElementById('upload-spinner');
 
+    // (Giai đoạn 2)
+    const mixBtn = document.getElementById('mix-btn');
+    const downloadBtn = document.getElementById('download-btn');
+    const mixMessage = document.getElementById('mix-message');
+
     if (logoutBtn) {
         logoutBtn.addEventListener('click', handleLogout);
     }
+
+    // Gán sự kiện cho Giai đoạn 1
     if (uploadBtn) {
         uploadBtn.addEventListener('click', () => {
             const file = fileInput.files[0];
@@ -166,8 +228,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Gán sự kiện cho Giai đoạn 2
+    if (mixBtn) {
+        mixBtn.addEventListener('click', () => {
+            handleMixRequest(mixMessage, mixBtn, downloadBtn);
+        });
+    }
 });
-
-
-
-
