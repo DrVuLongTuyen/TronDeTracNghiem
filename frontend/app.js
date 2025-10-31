@@ -46,11 +46,16 @@ async function checkUserSession() {
     }
 }
 
-// --- Xử lý Đăng nhập / Đăng ký ---
+// --- (ĐÃ SỬA) Xử lý Đăng nhập / Đăng ký ---
 async function handleSignUp(email, password, msgEl) {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
-        showMessage(msgEl, `Lỗi đăng ký: ${error.message}`, true);
+        // (SỬA) 2b: Xử lý lỗi email đã tồn tại
+        if (error.message === 'User already registered') {
+            showMessage(msgEl, 'Lỗi đăng ký: Tài khoản này đã đăng ký, vui lòng chuyển sang đăng nhập.', true);
+        } else {
+            showMessage(msgEl, `Lỗi đăng ký: ${error.message}`, true);
+        }
     } else {
         showMessage(msgEl, 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực.', false);
     }
@@ -59,7 +64,16 @@ async function handleSignUp(email, password, msgEl) {
 async function handleLogin(email, password, msgEl) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-        showMessage(msgEl, `Lỗi đăng nhập: ${error.message}`, true);
+        // (SỬA) 1a & 1b: Xử lý lỗi đăng nhập
+        if (error.message === 'Email not confirmed') {
+            // 1b: Email chưa xác thực
+            showMessage(msgEl, 'Lỗi đăng nhập: Email chưa xác thực. Vui lòng kiểm tra email của bạn.', true);
+        } else if (error.message === 'Invalid login credentials') {
+            // 1a: Sai email hoặc mật khẩu (Bảo mật)
+            showMessage(msgEl, 'Lỗi đăng nhập: Sai email hoặc mật khẩu.', true);
+        } else {
+            showMessage(msgEl, `Lỗi đăng nhập: ${error.message}`, true);
+        }
     } else {
         window.location.href = 'dashboard.html';
     }
@@ -182,7 +196,7 @@ async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
         });
 
         if (response.ok) {
-            // --- (MỚI) LẤY TÊN FILE TỪ SERVER ---
+            // --- (SỬA) LẤY TÊN FILE TỪ SERVER ---
             const contentDisposition = response.headers.get('content-disposition');
             let downloadName = `Bo_de_tron_${baseName}.zip`; // Tên dự phòng
             if (contentDisposition) {
