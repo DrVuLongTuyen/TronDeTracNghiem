@@ -12,11 +12,14 @@
 
         <h1>Hướng dẫn sử dụng - Trộn Đề Trắc Nghiệm</h1>
 
-        <h2>Tính năng hiện tại (Giai đoạn 1)</h2>
+        <h2>Tính năng hiện tại</h2>
         <ul>
             <li><strong>Xác thực người dùng:</strong> Đăng ký tài khoản, đăng nhập, và xác thực qua email.</li>
             <li><strong>Upload Đề Gốc:</strong> Tải lên tệp <code>.docx</code> chứa các câu hỏi trắc nghiệm.</li>
             <li><strong>Phân tích & Lưu trữ:</strong> Hệ thống tự động đọc và lưu câu hỏi vào cơ sở dữ liệu cá nhân của bạn.</li>
+            <li><strong>Xóa kho:</strong> Xóa toàn bộ câu hỏi cũ để chuẩn bị cho bộ đề mới.</li>
+            <li><strong>Trộn đề:</strong> Tạo ra nhiều mã đề hoán vị (câu hỏi và/hoặc đáp án).</li>
+            <li><strong>Xuất tệp:</strong> Tải về file <code>.zip</code> chứa các tệp đề <code>.docx</code> đã trộn và 1 tệp đáp án tổng hợp.</li>
         </ul>
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
@@ -43,12 +46,12 @@
         <h3>3. Đăng nhập</h3>
         <p>Sau khi đã xác thực, bạn có thể đăng nhập bằng email và mật khẩu đã tạo.</p>
 
-        <h3>4. Tải lên Đề Gốc</h3>
+        <h3>4. Quy trình làm việc</h3>
         <ol>
-            <li>Sau khi đăng nhập, bạn sẽ ở trang "Bảng điều khiển".</li>
-            <li>Nhấn nút <strong>"Choose File"</strong> (hoặc "Chọn tệp") và chọn tệp <code>.docx</code> từ máy tính của bạn.</li>
-            <li>Nhấn nút <strong>"Tải lên và xử lý"</strong>.</li>
-            <li>Chờ trong giây lát. Nếu tệp hợp lệ, hệ thống sẽ báo "Xử lý thành công... Đã lưu X câu hỏi."</li>
+            <li><strong>(Nếu cần) Xóa kho cũ:</strong> Nếu bạn muốn làm một bộ đề mới, hãy nhấn nút <strong>"Xóa toàn bộ kho câu hỏi cũ"</strong>.</li>
+            <li><strong>Tải lên đề gốc:</strong> Nhấn <strong>"Chọn tệp"</strong> và chọn tệp <code>.docx</code> đã định dạng (xem bên dưới). Nhấn <strong>"Tải lên và xử lý"</strong>. Đợi đến khi có thông báo "Xử lý thành công...".</li>
+            <li><strong>Trộn đề:</strong> Kéo xuống mục "Tạo Đề hoán vị", nhập số lượng đề bạn muốn và tên tệp (ví dụ: VLT).</li>
+            <li><strong>Tải về:</strong> Nhấn <strong>"Bắt đầu trộn đề"</strong>. Chờ vài giây, nút <strong>"Tải về (.zip)"</strong> sẽ hiện ra. Nhấn vào đó để tải tệp nén chứa các mã đề và đáp án.</li>
         </ol>
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
@@ -106,7 +109,11 @@ C. Lysosome.
             <li><strong>Đăng nhập không được</strong>: Bạn đã nhấn vào link xác thực trong email chưa? Vui lòng kiểm tra email (cả mục Spam).</li>
             <li><strong>Upload báo lỗi: "Không tìm thấy câu hỏi..."</strong>: Tệp <code>.docx</code> của bạn đã định dạng sai. Vui lòng kiểm tra lại 6 quy tắc ở trên.</li>
             <li><strong>Upload báo lỗi: "Lỗi kết nối API: Failed to fetch"</strong>: Có thể máy chủ Backend đang tạm nghỉ. Vui lòng đợi 30 giây và nhấn nút "Tải lên" lại.</li>
+            <li><strong>Trộn đề báo lỗi: "Failed to fetch"</strong>: Tương tự như trên, máy chủ đang "ngủ". Vui lòng đợi 30 giây và nhấn "Bắt đầu trộn đề" lại.</li>
         </ul>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        <a href="dashboard.html" style="text-decoration: none; display: inline-block;">&larr; Quay lại Bảng điều khiển</a>
 
     </div>
 </body>
