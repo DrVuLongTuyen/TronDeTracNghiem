@@ -1,8 +1,8 @@
 // ==================================================================
-// == CẤU HÌNH SUPABASE VÀ API (ĐÃ LÀM Ở GIAI ĐOẠN 1) ==
+// == QUAN TRỌNG: HÃY ĐẢM BẢO 3 DÒNG NÀY LÀ CỦA BẠN ==
 // ==================================================================
 const SUPABASE_URL = 'https://iezcijerbmsgsxilsixo.supabase.co'; // Giữ nguyên URL của bạn
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllemNpamVyYm1zZ3N4aWxzaXhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NDg5MjAsImV4cCI6MjA3NzEyNDkyMH0.g_VIc4KIpJhKutJ3rBCbKB02gKcjhmaGMsvbG9rjcUk'; // Giữ nguyên Key ANNON của bạn
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlleGNpamllemJtc2dzeGlsc2l4byIsIm9sZSI6ImFub24iLCJpYXQiOjE3MjkzODIzODMsImV4cCI6MjA0NDk1ODM4M30.zMv_s09Rk_nK-X-sS8oYhDo-MvyOVP0Eafk-X5F0mIY'; // Giữ nguyên Key ANNON của bạn
 const API_BASE_URL = 'https://trondetn-api.onrender.com'; // Giữ nguyên URL API Render của bạn
 // ==================================================================
 
@@ -29,9 +29,9 @@ async function checkUserSession() {
     if (!supabase) return;
 
     const { data: { session }, error } = await supabase.auth.getSession();
-
+    
     const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
-
+    
     if (session) { // Đã đăng nhập
         if (isAuthPage) {
             window.location.href = 'dashboard.html';
@@ -78,7 +78,7 @@ async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
          showMessage(msgEl, 'Lỗi: API Backend chưa được cấu hình trong app.js', true);
          return;
     }
-
+    
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
         showMessage(msgEl, 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', true);
@@ -88,7 +88,7 @@ async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
 
     const formData = new FormData();
     formData.append('file', file);
-
+    
     showMessage(msgEl, 'Đang tải lên và xử lý...', false);
     btnEl.disabled = true;
     spinnerEl.style.display = 'inline-block';
@@ -99,15 +99,15 @@ async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
             headers: { 'Authorization': `Bearer ${session.access_token}` },
             body: formData
         });
-
+        
         const result = await response.json();
-
+        
         if (response.ok) {
             showMessage(msgEl, `${result.message}. Đã lưu ${result.questions_saved} câu hỏi.`, false);
         } else {
             showMessage(msgEl, `Lỗi: ${result.error || 'Lỗi không xác định từ server'}`, true);
         }
-
+        
     } catch (error) {
         showMessage(msgEl, `Lỗi kết nối API: ${error.message}`, true);
     } finally {
@@ -117,7 +117,42 @@ async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
     }
 }
 
-// --- (MỚI) Xử lý Trộn đề (Giai đoạn 2) ---
+// --- (MỚI) Xử lý Xóa Kho ---
+async function handleClearDatabase(msgEl, btnEl) {
+    // Lấy token
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        showMessage(msgEl, 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', true);
+        return;
+    }
+
+    showMessage(msgEl, 'Đang xóa dữ liệu cũ...', false);
+    btnEl.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/clear`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${session.access_token}`
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showMessage(msgEl, result.message, false);
+        } else {
+            showMessage(msgEl, `Lỗi: ${result.error}`, true);
+        }
+        
+    } catch (error) {
+        showMessage(msgEl, `Lỗi kết nối API: ${error.message}. Thử lại.`, true);
+    } finally {
+        btnEl.disabled = false;
+    }
+}
+
+// --- Xử lý Trộn đề (Giai đoạn 2) ---
 async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
     const numTests = document.getElementById('num-tests-input').value;
     const baseName = document.getElementById('base-name-input').value || 'VLT';
@@ -154,7 +189,7 @@ async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
             // Cập nhật link cho nút tải về
             downloadBtnEl.href = downloadUrl;
             downloadBtnEl.download = `Bo_${numTests}_de_tron_${baseName}.zip`;
-
+            
             // Hiển thị nút tải về
             downloadBtnEl.style.display = 'inline-block';
             showMessage(msgEl, `Đã trộn xong ${numTests} đề! Nhấn nút 'Tải về' để lưu.`, false);
@@ -182,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginBtn = document.getElementById('login-btn');
     const signupBtn = document.getElementById('signup-btn');
     const authMessage = document.getElementById('auth-message');
-
+    
     if (loginBtn) {
         loginBtn.addEventListener('click', () => {
             const email = document.getElementById('email').value;
@@ -200,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Trang Dashboard (dashboard.html) ---
     const logoutBtn = document.getElementById('logout-btn');
-
+    
     // (Giai đoạn 1)
     const uploadBtn = document.getElementById('upload-btn');
     const fileInput = document.getElementById('file-input');
@@ -208,8 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadSpinner = document.getElementById('upload-spinner');
 
     // (MỚI) Giai đoạn 1.5 - Nút Xóa Kho
-const clearDbBtn = document.getElementById('clear-db-btn');
-    
+    const clearDbBtn = document.getElementById('clear-db-btn');
+
     // (Giai đoạn 2)
     const mixBtn = document.getElementById('mix-btn');
     const downloadBtn = document.getElementById('download-btn');
@@ -218,7 +253,7 @@ const clearDbBtn = document.getElementById('clear-db-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', handleLogout);
     }
-
+    
     // Gán sự kiện cho Giai đoạn 1
     if (uploadBtn) {
         uploadBtn.addEventListener('click', () => {
@@ -232,16 +267,16 @@ const clearDbBtn = document.getElementById('clear-db-btn');
     }
 
     // (MỚI) Gán sự kiện cho Giai đoạn 1.5
-if (clearDbBtn) {
-    clearDbBtn.addEventListener('click', () => {
-        // Yêu cầu xác nhận
-        if (!confirm('Bạn có chắc chắn muốn XÓA TOÀN BỘ kho câu hỏi hiện tại không? Hành động này không thể hoàn tác.')) {
-            return;
-        }
-        // Dùng chung ô thông báo với upload
-        handleClearDatabase(uploadMessage, clearDbBtn);
-    });
-}
+    if (clearDbBtn) {
+        clearDbBtn.addEventListener('click', () => {
+            // Yêu cầu xác nhận
+            if (!confirm('Bạn có chắc chắn muốn XÓA TOÀN BỘ kho câu hỏi hiện tại không? Hành động này không thể hoàn tác.')) {
+                return;
+            }
+            // Dùng chung ô thông báo với upload
+            handleClearDatabase(uploadMessage, clearDbBtn);
+        });
+    }
     
     // Gán sự kiện cho Giai đoạn 2
     if (mixBtn) {
@@ -250,40 +285,3 @@ if (clearDbBtn) {
         });
     }
 });
-
-// --- (MỚI) Xử lý Xóa Kho ---
-async function handleClearDatabase(msgEl, btnEl) {
-    // Lấy token
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-        showMessage(msgEl, 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', true);
-        return;
-    }
-
-    showMessage(msgEl, 'Đang xóa dữ liệu cũ...', false);
-    btnEl.disabled = true;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/clear`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${session.access_token}`
-            }
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            showMessage(msgEl, result.message, false);
-        } else {
-            showMessage(msgEl, `Lỗi: ${result.error}`, true);
-        }
-
-    } catch (error) {
-        showMessage(msgEl, `Lỗi kết nối API: ${error.message}. Thử lại.`, true);
-    } finally {
-        btnEl.disabled = false;
-    }
-}
-
-
