@@ -103,3 +103,58 @@ button:disabled {
     
 }
 
+/* --- CSS CHO GIAI ĐOẠN 2 --- */
+
+#mix-section {
+    margin-top: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-group input[type="number"],
+.form-group input[type="text"] {
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.form-group span {
+    margin-left: 10px;
+    color: #555;
+}
+
+#mix-btn {
+    background-color: #28a745;
+}
+#mix-btn:hover {
+    background-color: #218838;
+}
+
+.button-download {
+    display: inline-block;
+    background-color: #17a2b8;
+    color: white;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 10px;
+    text-decoration: none;
+    vertical-align: middle;
+}
+.button-download:hover {
+    background-color: #138496;
+}
+
+
