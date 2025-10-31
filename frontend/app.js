@@ -235,3 +235,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// --- (MỚI) Xử lý Xóa Kho ---
+async function handleClearDatabase(msgEl, btnEl) {
+    // Lấy token
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        showMessage(msgEl, 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', true);
+        return;
+    }
+
+    showMessage(msgEl, 'Đang xóa dữ liệu cũ...', false);
+    btnEl.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/clear`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${session.access_token}`
+            }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            showMessage(msgEl, result.message, false);
+        } else {
+            showMessage(msgEl, `Lỗi: ${result.error}`, true);
+        }
+
+    } catch (error) {
+        showMessage(msgEl, `Lỗi kết nối API: ${error.message}. Thử lại.`, true);
+    } finally {
+        btnEl.disabled = false;
+    }
+}
