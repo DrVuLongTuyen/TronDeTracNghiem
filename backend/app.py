@@ -8,7 +8,7 @@ import zipfile
 from docx import Document 
 from docx.shared import Pt 
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from datetime import datetime # <<< (MỚI) DÒNG NÀY ĐƯỢC THÊM VÀO
+from datetime import datetime 
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
@@ -36,6 +36,7 @@ def parse_test_document(file_stream):
     test_structure = []
     current_group = None
     current_question = None
+    pending_question_text = ""
 
     group_regex = re.compile(r"<(/?#?g\d+)>")
     question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
@@ -51,6 +52,7 @@ def parse_test_document(file_stream):
             current_group = {"group_tag": group_tag, "is_fixed": '#' in group_tag, "questions": []}
             test_structure.append(current_group)
             current_question = None
+            pending_question_text = ""
             continue
             
         question_match = question_regex.search(text)
@@ -58,22 +60,34 @@ def parse_test_document(file_stream):
             if current_group is None:
                 current_group = { "group_tag": "g3", "is_fixed": False, "questions": [] }
                 test_structure.append(current_group)
-            current_question = {"question_text": text, "answers": [], "correct_answer": None}
-            current_group["questions"].append(current_question)
+            
+            pending_question_text = text 
+            current_question = None 
             continue
             
         answer_match = answer_regex.search(text)
-        if answer_match and current_question is not None:
-            answer_prefix = answer_match.group(1).upper().replace('#', '')
-            answer_text = text[answer_match.end():].strip()
-            is_fixed = '#' in answer_match.group(0)
-            is_correct = any(run.font.underline for run in para.runs)
+        if answer_match:
+            if pending_question_text and current_question is None:
+                current_question = {"question_text": pending_question_text, "answers": [], "correct_answer": None}
+                current_group["questions"].append(current_question)
+                pending_question_text = "" 
             
-            answer_obj = {"prefix": answer_prefix, "text": answer_text, "is_fixed": is_fixed}
-            current_question["answers"].append(answer_obj)
-            if is_correct:
-                current_question["correct_answer"] = answer_prefix
+            if current_question is not None:
+                answer_prefix = answer_match.group(1).upper().replace('#', '')
+                answer_text = text[answer_match.end():].strip()
+                is_fixed = '#' in answer_match.group(0)
+                is_correct = any(run.font.underline for run in para.runs)
+                
+                answer_obj = {"prefix": answer_prefix, "text": answer_text, "is_fixed": is_fixed}
+                current_question["answers"].append(answer_obj)
+                if is_correct:
+                    current_question["correct_answer"] = answer_prefix
+                continue
+        
+        if pending_question_text and not group_match and not question_match and not answer_match:
+            pending_question_text += "\n" + text 
             continue
+
     return test_structure, None
 
 @app.route('/')
@@ -121,7 +135,7 @@ def handle_upload():
     return jsonify({"message": f"Xử lý thành công tệp '{file.filename}'", "questions_saved": len(rows_to_insert)}), 200
 
 
-# --- (MỚI) ENDPOINT XÓA KHO CÂU HỎI ---
+# --- (SỬA LẠI) ENDPOINT XÓA KHO CÂU HỎI ---
 
 @app.route('/clear', methods=['DELETE'])
 def handle_clear():
@@ -137,12 +151,10 @@ def handle_clear():
 
     # 2. Xóa dữ liệu
     try:
-        data, count = supabase.table('question_banks').delete().eq('user_id', user_id).execute()
+        # (SỬA) Sửa lại logic lấy kết quả
+        response = supabase.table('question_banks').delete().eq('user_id', user_id).execute()
+        num_deleted = len(response.data) # Lấy độ dài của list data
         
-        num_deleted = 0
-        if count and len(count) > 0 and isinstance(count[0], list):
-             num_deleted = len(count[0])
-
         return jsonify({"message": f"Đã xóa thành công {num_deleted} câu hỏi cũ."}), 200
         
     except Exception as e:
@@ -157,8 +169,9 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests):
     doc.add_paragraph() 
 
     num_questions = 0
-    if num_tests > 0:
-        num_questions = len(answer_key_map[f"{base_name}01"]) 
+    if num_tests > 0 and len(answer_key_map) > 0:
+        first_test_code = list(answer_key_map.keys())[0]
+        num_questions = len(answer_key_map[first_test_code])
     
     rows_per_col = (num_questions + 1) // 2 
     num_cols = (num_tests + 1) * 2
@@ -251,7 +264,10 @@ def handle_mix():
                     random.shuffle(question_list)
                 
                 for q in question_list:
-                    doc.add_paragraph(f"Câu {question_counter}. {q['question_text'].split('.', 1)[-1].strip()}", style='List Number')
+                    question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
+                    clean_question_text = question_regex.sub("", q['question_text']).strip()
+                    
+                    doc.add_paragraph(f"Câu {question_counter}. {clean_question_text}")
                     question_counter += 1
                     
                     answers = json.loads(q['answers'])
@@ -261,6 +277,10 @@ def handle_mix():
                         random.shuffle(answers)
                     
                     answer_prefixes = ['A', 'B', 'C', 'D']
+                    
+                    # (MỚI) Thêm một biến cờ
+                    found_correct_answer = False 
+                    
                     for j, ans in enumerate(answers):
                         new_prefix = answer_prefixes[j] 
                         p = doc.add_paragraph(f"{new_prefix}. {ans['text']}")
@@ -268,6 +288,11 @@ def handle_mix():
                         
                         if ans['prefix'] == correct_answer_original_prefix:
                             answer_key_map[test_code].append(new_prefix)
+                            found_correct_answer = True # (MỚI) Đặt cờ
+
+                    # (MỚI) Nếu không tìm thấy đáp án đúng (do file gốc thiếu gạch chân)
+                    if not found_correct_answer:
+                        answer_key_map[test_code].append('?') # Thêm placeholder
 
             doc_buffer = io.BytesIO()
             doc.save(doc_buffer)
@@ -282,14 +307,12 @@ def handle_mix():
 
     zip_buffer.seek(0)
     
-    # --- (MỚI) TẠO TÊN FILE ZIP VỚI TIMESTAMP ---
-    current_time = datetime.now().strftime('%Y%m%d_%H%M%S') # <<< DÒNG NÀY MỚI
+    current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     
     return send_file(
         zip_buffer,
         mimetype='application/zip',
         as_attachment=True,
-        # (MỚI) SỬA TÊN FILE TẢI VỀ
         download_name=f'Bo_de_tron_{base_name}_{current_time}.zip' 
     )
 
