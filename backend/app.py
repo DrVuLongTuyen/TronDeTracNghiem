@@ -213,6 +213,39 @@ def handle_mix():
         download_name=f'Bo_{num_tests}_de_tron.zip'
     )
 
+# --- (MỚI) ENDPOINT XÓA KHO CÂU HỎI ---
+
+@app.route('/clear', methods=['DELETE'])
+def handle_clear():
+    # 1. Xác thực người dùng
+    auth_header = request.headers.get('Authorization')
+    if not auth_header: return jsonify({"error": "Thiếu token xác thực"}), 401
+
+    try:
+        jwt_token = auth_header.split(' ')[1]
+        user_id = supabase.auth.get_user(jwt_token).user.id
+    except Exception as e:
+        return jsonify({"error": f"Token không hợp lệ: {e}"}), 401
+
+    # 2. Xóa dữ liệu
+    try:
+        # Xóa tất cả các hàng có user_id_
+        data, count = supabase.table('question_banks').delete().eq('user_id', user_id).execute()
+
+        num_deleted = 0
+        # 'count' trả về một tuple, ta cần phần tử thứ 2 (chỉ số 1)
+        if count and len(count) > 1 and count[1]:
+            num_deleted = len(count[1])
+
+        return jsonify({"message": f"Đã xóa thành công {num_deleted} câu hỏi cũ."}), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Lỗi khi xóa dữ liệu: {e}"}), 500
+
+# Chạy ứng dụng (cho Render)
+# (Dòng if __name__... đã có sẵn, bạn dán code mới BÊN TRÊN nó)
+
 # Chạy ứng dụng (cho Render)
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+
