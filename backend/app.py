@@ -8,7 +8,7 @@ import zipfile
 from docx import Document 
 from docx.shared import Pt 
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from datetime import datetime 
+from datetime import datetime # <<< (MỚI) DÒNG NÀY ĐƯỢC THÊM VÀO
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
@@ -36,9 +36,6 @@ def parse_test_document(file_stream):
     test_structure = []
     current_group = None
     current_question = None
-    
-    # (MỚI) Thêm biến để lưu trữ văn bản câu hỏi đang chờ
-    pending_question_text = ""
 
     group_regex = re.compile(r"<(/?#?g\d+)>")
     question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
@@ -54,7 +51,6 @@ def parse_test_document(file_stream):
             current_group = {"group_tag": group_tag, "is_fixed": '#' in group_tag, "questions": []}
             test_structure.append(current_group)
             current_question = None
-            pending_question_text = ""
             continue
             
         question_match = question_regex.search(text)
@@ -62,39 +58,22 @@ def parse_test_document(file_stream):
             if current_group is None:
                 current_group = { "group_tag": "g3", "is_fixed": False, "questions": [] }
                 test_structure.append(current_group)
-            
-            # (SỬA) Lưu văn bản vào biến chờ, chưa tạo câu hỏi vội
-            pending_question_text = text 
-            current_question = None # Đặt lại câu hỏi hiện tại
+            current_question = {"question_text": text, "answers": [], "correct_answer": None}
+            current_group["questions"].append(current_question)
             continue
             
         answer_match = answer_regex.search(text)
-        if answer_match:
-             # (MỚI) Nếu tìm thấy đáp án A, B, C, D,
-             # thì tạo câu hỏi từ văn bản đang chờ (pending_question_text)
-            if pending_question_text and current_question is None:
-                current_question = {"question_text": pending_question_text, "answers": [], "correct_answer": None}
-                current_group["questions"].append(current_question)
-                pending_question_text = "" # Xóa văn bản chờ
+        if answer_match and current_question is not None:
+            answer_prefix = answer_match.group(1).upper().replace('#', '')
+            answer_text = text[answer_match.end():].strip()
+            is_fixed = '#' in answer_match.group(0)
+            is_correct = any(run.font.underline for run in para.runs)
             
-            if current_question is not None:
-                answer_prefix = answer_match.group(1).upper().replace('#', '')
-                answer_text = text[answer_match.end():].strip()
-                is_fixed = '#' in answer_match.group(0)
-                is_correct = any(run.font.underline for run in para.runs)
-                
-                answer_obj = {"prefix": answer_prefix, "text": answer_text, "is_fixed": is_fixed}
-                current_question["answers"].append(answer_obj)
-                if is_correct:
-                    current_question["correct_answer"] = answer_prefix
-                continue
-        
-        # (MỚI) Nếu dòng này không phải là thẻ nhóm, câu hỏi, hay đáp án
-        # và chúng ta đang có một câu hỏi đang chờ, thì NỐI văn bản này vào
-        if pending_question_text and not group_match and not question_match and not answer_match:
-            pending_question_text += "\n" + text # Thêm vào như một dòng mới
+            answer_obj = {"prefix": answer_prefix, "text": answer_text, "is_fixed": is_fixed}
+            current_question["answers"].append(answer_obj)
+            if is_correct:
+                current_question["correct_answer"] = answer_prefix
             continue
-
     return test_structure, None
 
 @app.route('/')
@@ -178,10 +157,8 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests):
     doc.add_paragraph() 
 
     num_questions = 0
-    if num_tests > 0 and len(answer_key_map) > 0:
-         # Lấy mã đề đầu tiên làm tham chiếu
-        first_test_code = list(answer_key_map.keys())[0]
-        num_questions = len(answer_key_map[first_test_code])
+    if num_tests > 0:
+        num_questions = len(answer_key_map[f"{base_name}01"]) 
     
     rows_per_col = (num_questions + 1) // 2 
     num_cols = (num_tests + 1) * 2
@@ -274,15 +251,8 @@ def handle_mix():
                     random.shuffle(question_list)
                 
                 for q in question_list:
-                    # --- (MỚI) FIX LỖI ---
-                    # 1. Dùng regex để xóa "Câu X." hoặc "Câu X:" cũ một cách an toàn
-                    question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
-                    clean_question_text = question_regex.sub("", q['question_text']).strip()
-                    
-                    # 2. Sửa lại: Tự thêm số câu, BỎ style='List Number'
-                    doc.add_paragraph(f"Câu {question_counter}. {clean_question_text}")
+                    doc.add_paragraph(f"Câu {question_counter}. {q['question_text'].split('.', 1)[-1].strip()}", style='List Number')
                     question_counter += 1
-                    # --- KẾT THÚC FIX ---
                     
                     answers = json.loads(q['answers'])
                     correct_answer_original_prefix = q['correct_answer'] 
