@@ -9,11 +9,12 @@ from docx import Document
 from docx.shared import Pt 
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
-import traceback # (MỚI) Thêm thư viện để in lỗi chi tiết
+import traceback # Thư viện để in lỗi chi tiết
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
-from supabase import create_client, Client
+# (QUAN TRỌNG) Import thư viện Supabase chính xác
+from supabase import create_client, Client 
 
 # --- Cấu hình ---
 app = Flask(__name__)
@@ -26,7 +27,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 print("Đã kết nối Supabase (Backend Service Role)")
 
 
-# --- HÀM /UPLOAD (GIAI ĐOẠN 1) ---
+# --- HÀM /UPLOAD (ĐÃ SỬA LỖI ĐỌC CÂU HỎI NHIỀU DÒNG) ---
 
 def parse_test_document(file_stream):
     try:
@@ -41,7 +42,6 @@ def parse_test_document(file_stream):
 
     group_regex = re.compile(r"<(/?#?g\d+)>")
     question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
-    # (SỬA) Sửa Regex để chấp nhận cả A, B, C, D, E, F... (an toàn hơn)
     answer_regex = re.compile(r"^(#?[A-Z])[\.:]?\s+", re.IGNORECASE) 
 
     for para in doc.paragraphs:
@@ -137,7 +137,7 @@ def handle_upload():
     return jsonify({"message": f"Xử lý thành công tệp '{file.filename}'", "questions_saved": len(rows_to_insert)}), 200
 
 
-# --- (SỬA LẠI) ENDPOINT XÓA KHO CÂU HỎI ---
+# --- ENDPOINT XÓA KHO CÂU HỎI (ĐÃ SỬA LỖI) ---
 
 @app.route('/clear', methods=['DELETE'])
 def handle_clear():
@@ -162,7 +162,7 @@ def handle_clear():
         return jsonify({"error": f"Lỗi khi xóa dữ liệu: {e}"}), 500
 
     
-# --- (NÂNG CẤP) ENDPOINT TRỘN ĐỀ (GIAI ĐOẠN 2) ---
+# --- (NÂNG CẤP) ENDPOINT TRỘN ĐỀ (VỚI TRY...EXCEPT) ---
 
 def create_answer_key_doc(answer_key_map, base_name, num_tests):
     doc = Document()
@@ -210,7 +210,7 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests):
 
 @app.route('/mix', methods=['POST'])
 def handle_mix():
-    # (MỚI) Thêm khối TRY...EXCEPT lớn để bắt lỗi
+    # (QUAN TRỌNG) Thêm khối TRY...EXCEPT lớn để bắt lỗi
     try:
         # 1. Xác thực người dùng
         auth_header = request.headers.get('Authorization')
@@ -282,7 +282,7 @@ def handle_mix():
                         answer_prefixes = ['A', 'B', 'C', 'D']
                         found_correct_answer = False 
                         
-                        # (MỚI) Thêm [[:4]] để giới hạn chỉ 4 đáp án A,B,C,D
+                        # Giới hạn chỉ 4 đáp án A,B,C,D
                         for j, ans in enumerate(answers[:4]):
                             new_prefix = answer_prefixes[j] 
                             p = doc.add_paragraph(f"{new_prefix}. {ans['text']}")
@@ -317,7 +317,7 @@ def handle_mix():
             download_name=f'Bo_de_tron_{base_name}_{current_time}.zip' 
         )
         
-    # (MỚI) Bắt lỗi và trả về thông báo
+    # (QUAN TRỌNG) Bắt lỗi và trả về thông báo (thay vì làm sập server)
     except Exception as e:
         print("--- LỖI NGHIÊM TRỌNG TRONG /MIX ---")
         print(traceback.format_exc()) # In lỗi chi tiết ra Log của Render
