@@ -17,8 +17,8 @@ from supabase import create_client, Client
 
 # --- Cấu hình ---
 app = Flask(__name__)
-# (SỬA LỖI) Sửa 'Content-Disposition' (viết hoa) thành 'content-disposition' (viết thường)
-CORS(app, expose_headers=['content-disposition']) 
+# (SỬA LỖI) Thêm CẢ HAI trường hợp Viết hoa và viết thường
+CORS(app, expose_headers=['content-disposition', 'Content-Disposition']) 
 
 # --- Kết nối Supabase ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
