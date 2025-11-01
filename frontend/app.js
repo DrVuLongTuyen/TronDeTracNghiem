@@ -6,12 +6,16 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const API_BASE_URL = 'https://trondetn-api.onrender.com'; // Giữ nguyên URL API Render của bạn
 // ==================================================================
 
+// (SỬA LỖI) Thêm lại dòng import này
+const { createClient } = window.supabase;
+
 let supabase;
 try {
     if (SUPABASE_URL.includes('YOUR_SUPABASE_URL')) {
         console.warn("app.js: Supabase URL chưa được cấu hình.");
     }
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // (SỬA LỖI) Sửa lại hàm khởi tạo
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch (error) {
     console.error("Lỗi khởi tạo Supabase:", error.message);
 }
