@@ -10,7 +10,8 @@ from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
 import traceback 
-from datetime import datetime
+# (MỚI) Import Cm (centimet) cho thụt lề
+from docx.shared import Cm 
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
@@ -249,6 +250,12 @@ def handle_mix():
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             
+            # --- (MỚI) HÀM STYLING CHUNG ---
+            def style_run(run, bold=False):
+                run.font.name = 'Times New Roman' # Rule 1
+                run.font.size = Pt(13)           # Rule 2
+                run.font.bold = bold             # Rule 4
+            
             # 5. Lặp để tạo số lượng đề
             for i in range(1, num_tests + 1):
                 test_code = f"{base_name}{i:02d}" 
@@ -270,7 +277,16 @@ def handle_mix():
                         question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
                         clean_question_text = question_regex.sub("", q['question_text']).strip()
                         
-                        doc.add_paragraph(f"Câu {question_counter}. {clean_question_text}")
+                        # --- (SỬA) ĐỊNH DẠNG CÂU HỎI ---
+                        p_q = doc.add_paragraph()
+                        p_q.paragraph_format.line_spacing = 1.15    # Rule 3
+                        p_q.paragraph_format.left_indent = Pt(0)    # Rule 5
+                        
+                        run_prefix = p_q.add_run(f"Câu {question_counter}. ")
+                        style_run(run_prefix, bold=True) 
+                        
+                        run_text = p_q.add_run(clean_question_text)
+                        style_run(run_text, bold=False)
                         question_counter += 1
                         
                         answers = json.loads(q['answers'])
@@ -282,14 +298,23 @@ def handle_mix():
                         answer_prefixes = ['A', 'B', 'C', 'D']
                         found_correct_answer = False 
                         
+                        # --- (SỬA) ĐỊNH DẠNG 4 ĐÁP ÁN ---
                         for j, ans in enumerate(answers[:4]):
                             new_prefix = answer_prefixes[j] 
-                            p = doc.add_paragraph(f"{new_prefix}. {ans['text']}")
-                            p.paragraph_format.left_indent = Pt(36) 
+                            
+                            p_ans = doc.add_paragraph()
+                            p_ans.paragraph_format.line_spacing = 1.15  # Rule 3
+                            p_ans.paragraph_format.left_indent = Cm(0.5) # Rule 6
+                            
+                            run_p_prefix = p_ans.add_run(f"{new_prefix}. ")
+                            style_run(run_p_prefix, bold=True) # Rule 4
+                            
+                            run_p_text = p_ans.add_run(ans['text'])
+                            style_run(run_p_text)
                             
                             if ans['prefix'] == correct_answer_original_prefix:
                                 answer_key_map[test_code].append(new_prefix)
-                                found_correct_answer = True 
+                                found_correct_answer = True
 
                         if not found_correct_answer:
                             answer_key_map[test_code].append('?') 
@@ -326,4 +351,3 @@ def handle_mix():
 # Chạy ứng dụng (cho Render)
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
-
