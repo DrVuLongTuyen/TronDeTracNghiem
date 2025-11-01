@@ -50,7 +50,6 @@ async function checkUserSession() {
 async function handleSignUp(email, password, msgEl) {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
-        // (SỬA) 2b: Xử lý lỗi email đã tồn tại
         if (error.message === 'User already registered') {
             showMessage(msgEl, 'Lỗi đăng ký: Tài khoản này đã đăng ký, vui lòng chuyển sang đăng nhập.', true);
         } else {
@@ -64,12 +63,9 @@ async function handleSignUp(email, password, msgEl) {
 async function handleLogin(email, password, msgEl) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-        // (SỬA) 1a & 1b: Xử lý lỗi đăng nhập
         if (error.message === 'Email not confirmed') {
-            // 1b: Email chưa xác thực
             showMessage(msgEl, 'Lỗi đăng nhập: Email chưa xác thực. Vui lòng kiểm tra email của bạn.', true);
         } else if (error.message === 'Invalid login credentials') {
-            // 1a: Sai email hoặc mật khẩu (Bảo mật)
             showMessage(msgEl, 'Lỗi đăng nhập: Sai email hoặc mật khẩu.', true);
         } else {
             showMessage(msgEl, `Lỗi đăng nhập: ${error.message}`, true);
@@ -196,8 +192,8 @@ async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
         });
 
         if (response.ok) {
-            // --- (SỬA) LẤY TÊN FILE TỪ SERVER ---
-            const contentDisposition = response.headers.get('content-disposition');
+            // --- (SỬA LỖI) LẤY TÊN FILE (Kiểm tra cả 2 trường hợp viết hoa/thường) ---
+            const contentDisposition = response.headers.get('content-disposition') || response.headers.get('Content-Disposition');
             let downloadName = `Bo_de_tron_${baseName}.zip`; // Tên dự phòng
             if (contentDisposition) {
                 const filenameMatch = contentDisposition.match(/filename="(.+)"/);
@@ -213,7 +209,7 @@ async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
 
             // Cập nhật link cho nút tải về
             downloadBtnEl.href = downloadUrl;
-            downloadBtnEl.download = downloadName; // (SỬA) Dùng tên file động
+            downloadBtnEl.download = downloadName; 
             
             // Hiển thị nút tải về
             downloadBtnEl.style.display = 'inline-block';
