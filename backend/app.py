@@ -9,7 +9,7 @@ from docx import Document
 from docx.shared import Pt 
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
-import traceback # Thư viện để in lỗi chi tiết
+import traceback # (QUAN TRỌNG) Thêm thư viện để in lỗi chi tiết
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
@@ -42,6 +42,7 @@ def parse_test_document(file_stream):
 
     group_regex = re.compile(r"<(/?#?g\d+)>")
     question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
+    # (SỬA) Sửa Regex để chấp nhận cả A, B, C, D, E, F... (an toàn hơn)
     answer_regex = re.compile(r"^(#?[A-Z])[\.:]?\s+", re.IGNORECASE) 
 
     for para in doc.paragraphs:
@@ -293,6 +294,7 @@ def handle_mix():
                                 found_correct_answer = True 
 
                         if not found_correct_answer:
+                            # Nếu câu hỏi không có đáp án đúng (thiếu gạch chân)
                             answer_key_map[test_code].append('?') 
 
                 doc_buffer = io.BytesIO()
@@ -323,7 +325,7 @@ def handle_mix():
         print(traceback.format_exc()) # In lỗi chi tiết ra Log của Render
         print("---------------------------------")
         # Trả về lỗi 500 cho người dùng
-        return jsonify({"error": f"Lỗi máy chủ nội bộ: {str(e)}. Vui lòng kiểm tra lại file .docx (ví dụ: thiếu đáp án) hoặc liên hệ hỗ trợ."}), 500
+        return jsonify({"error": f"Lỗi máy chủ nội bộ: {str(e)}. Vui lòng kiểm tra lại file .docx (ví dụ: thiếu đáp án, sai định dạng) hoặc liên hệ hỗ trợ."}), 500
 
 
 # Chạy ứng dụng (cho Render)
