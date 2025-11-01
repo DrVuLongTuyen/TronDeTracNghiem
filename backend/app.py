@@ -10,6 +10,7 @@ from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
 import traceback 
+from datetime import datetime
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
@@ -325,3 +326,4 @@ def handle_mix():
 # Chạy ứng dụng (cho Render)
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+
