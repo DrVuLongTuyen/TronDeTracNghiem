@@ -10,7 +10,6 @@ from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
 import traceback 
-# (MỚI) Import Cm (centimet) cho thụt lề
 from docx.shared import Cm 
 
 from flask import Flask, request, jsonify, send_file
@@ -19,7 +18,6 @@ from supabase import create_client, Client
 
 # --- Cấu hình ---
 app = Flask(__name__)
-# (SỬA LỖI) Thêm CẢ HAI trường hợp Viết hoa và viết thường
 CORS(app, expose_headers=['content-disposition', 'Content-Disposition']) 
 
 # --- Kết nối Supabase ---
@@ -252,9 +250,9 @@ def handle_mix():
             
             # --- (MỚI) HÀM STYLING CHUNG ---
             def style_run(run, bold=False):
-                run.font.name = 'Times New Roman' # Rule 1
-                run.font.size = Pt(13)           # Rule 2
-                run.font.bold = bold             # Rule 4
+                run.font.name = 'Times New Roman' 
+                run.font.size = Pt(13)           
+                run.font.bold = bold             
             
             # 5. Lặp để tạo số lượng đề
             for i in range(1, num_tests + 1):
@@ -279,8 +277,9 @@ def handle_mix():
                         
                         # --- (SỬA) ĐỊNH DẠNG CÂU HỎI ---
                         p_q = doc.add_paragraph()
-                        p_q.paragraph_format.line_spacing = 1.15    # Rule 3
-                        p_q.paragraph_format.left_indent = Pt(0)    # Rule 5
+                        p_q.paragraph_format.line_spacing = 1.15    
+                        p_q.paragraph_format.left_indent = Pt(0)    
+                        p_q.paragraph_format.space_after = Pt(0) # <<< DÒNG MỚI (SỬA LỖI DÃN ĐOẠN)
                         
                         run_prefix = p_q.add_run(f"Câu {question_counter}. ")
                         style_run(run_prefix, bold=True) 
@@ -303,11 +302,12 @@ def handle_mix():
                             new_prefix = answer_prefixes[j] 
                             
                             p_ans = doc.add_paragraph()
-                            p_ans.paragraph_format.line_spacing = 1.15  # Rule 3
-                            p_ans.paragraph_format.left_indent = Cm(0.5) # Rule 6
+                            p_ans.paragraph_format.line_spacing = 1.15  
+                            p_ans.paragraph_format.left_indent = Cm(0.5) 
+                            p_ans.paragraph_format.space_after = Pt(0) # <<< DÒNG MỚI (SỬA LỖI DÃN ĐOẠN)
                             
                             run_p_prefix = p_ans.add_run(f"{new_prefix}. ")
-                            style_run(run_p_prefix, bold=True) # Rule 4
+                            style_run(run_p_prefix, bold=True) 
                             
                             run_p_text = p_ans.add_run(ans['text'])
                             style_run(run_p_text)
