@@ -17,8 +17,8 @@ from supabase import create_client, Client
 
 # --- Cấu hình ---
 app = Flask(__name__)
-# (SỬA LỖI) Thêm "expose_headers" để Javascript có thể đọc được tên file
-CORS(app, expose_headers=['Content-Disposition']) 
+# (SỬA LỖI) Sửa 'Content-Disposition' (viết hoa) thành 'content-disposition' (viết thường)
+CORS(app, expose_headers=['content-disposition']) 
 
 # --- Kết nối Supabase ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
