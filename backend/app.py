@@ -300,7 +300,7 @@ def style_run(run, bold=False, italic=False, size=13):
     run.font.italic = italic
     
 # (SỬA LỖI) Sửa lại hàm style_paragraph để gọi đúng (space_before ở cuối)
-def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_after=0, page_break_before=False, keep_with_next=False, space_before=0):
+def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_after=0, page_break_before=False, keep_with_next=True, space_before=0):
     p.paragraph_format.alignment = align
     p.paragraph_format.line_spacing = line_spacing
     p.paragraph_format.space_after = Pt(space_after)
@@ -552,3 +552,4 @@ def handle_mix():
 # Chạy ứng dụng (cho Render)
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+
