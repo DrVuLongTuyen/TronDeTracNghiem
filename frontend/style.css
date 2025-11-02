@@ -235,3 +235,31 @@ select {
     width: auto;
     margin-right: 5px;
 }
+
+/* --- CSS CHO KHUNG THÔNG TIN HEADER --- */
+#header-info-section {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+#header-info-section label {
+    font-weight: bold;
+    color: #333;
+}
+
+#header-info-section input[type="text"],
+#header-info-section input[type="number"] {
+    width: calc(100% - 22px); /* 100% - padding*2 - border*2 */
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#header-info-section input[type="checkbox"] {
+    width: auto;
+    margin-right: 5px;
+}
