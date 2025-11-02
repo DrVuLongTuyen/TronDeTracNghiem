@@ -10,16 +10,39 @@
     <div class="container">
         <h1>Trộn Đề Trắc Nghiệm</h1>
         <div id="auth-form">
-            <h2>Đăng ký tài khoản</h2>
+            <h2>Tạo tài khoản mới</h2>
+            <p style="text-align: center; margin-top: -10px; margin-bottom: 20px; color: #555;">Nhanh chóng và dễ dàng.</p>
+
+            <div class="form-row">
+                <input type="text" id="first-name" placeholder="Họ" required style="width: 48%;">
+                <input type="text" id="last-name" placeholder="Tên" required style="width: 48%;">
+            </div>
+
             <input type="email" id="email" placeholder="Nhập email của bạn" required>
-            <input type="password" id="password" placeholder="Nhập mật khẩu (ít nhất 6 ký tự)" required>
+
+            <input type="password" id="password" placeholder="Mật khẩu (ít nhất 6 ký tự)" required>
+            <input type="password" id="confirm-password" placeholder="Xác nhận mật khẩu" required>
+
+            <label class="form-label">Ngày sinh:</label>
+            <div class="form-row">
+                <select id="dob-day" style="width: 32%;"></select>
+                <select id="dob-month" style="width: 32%;"></select>
+                <select id="dob-year" style="width: 32%;"></select>
+            </div>
+
+            <label class="form-label">Giới tính:</label>
+            <div class="form-row" style="justify-content: space-around; margin-bottom: 20px;">
+                <label><input type="radio" name="gender" value="Nữ"> Nữ</label>
+                <label><input type="radio" name="gender" value="Nam"> Nam</label>
+                <label><input type="radio" name="gender" value="Không muốn trả lời" checked> Không muốn trả lời</label>
+            </div>
             
             <button id="signup-btn">Đăng ký</button>
             
             <p id="auth-message"></p>
 
             <p style="margin-top: 20px; text-align: center; font-size: 14px;">
-                Đã có tài khoản? <a href="index.html">Đăng nhập ngay</a>
+                Bạn đã có tài khoản? <a href="index.html">Đăng nhập ngay</a>
             </p>
         </div>
     </div>
