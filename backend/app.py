@@ -377,7 +377,8 @@ def handle_mix():
 
                 # (SỬA LỖI) Đặt Tab Stop cho CỘT 2, không phải cho từng đoạn
                 tab_stops = cell_1.paragraphs[0].paragraph_format.tab_stops
-                tab_stop = tab_stops.add_tab_stop(Cm(15) - section.left_margin, WD_TAB_ALIGNMENT.CENTER) # (SỬA) 15cm
+                # (SỬA) Căn phải, không phải căn giữa, và không cần trừ lề
+                tab_stop = tab_stops.add_tab_stop(Cm(19), WD_TAB_ALIGNMENT.RIGHT)
 
                 p_exam = cell_1.paragraphs[0]
                 run_exam = p_exam.add_run("\t" + exam_name) 
@@ -385,23 +386,23 @@ def handle_mix():
                 style_paragraph(p_exam, line_spacing=1, space_after=0)
                 
                 p_class = cell_1.add_paragraph()
+                p_class.paragraph_format.tab_stops.add_tab_stop(Cm(19), WD_TAB_ALIGNMENT.RIGHT)
                 run_class = p_class.add_run(f"\tLỚP: {class_name}")
                 style_run(run_class, bold=True, size=12) 
                 style_paragraph(p_class, line_spacing=1, space_after=0)
-                p_class.paragraph_format.tab_stops.add_tab_stop(Cm(15) - section.left_margin, WD_TAB_ALIGNMENT.CENTER)
 
                 
                 p_subject = cell_1.add_paragraph()
+                p_subject.paragraph_format.tab_stops.add_tab_stop(Cm(19), WD_TAB_ALIGNMENT.RIGHT)
                 run_subject = p_subject.add_run(f"\tTên học phần: {subject_name} (Lần {exam_iteration})")
                 style_run(run_subject, bold=False, size=12) 
                 style_paragraph(p_subject, line_spacing=1, space_after=0)
-                p_subject.paragraph_format.tab_stops.add_tab_stop(Cm(15) - section.left_margin, WD_TAB_ALIGNMENT.CENTER)
 
                 p_time = cell_1.add_paragraph()
+                p_time.paragraph_format.tab_stops.add_tab_stop(Cm(19), WD_TAB_ALIGNMENT.RIGHT)
                 run_time = p_time.add_run(f"\tThời gian: {exam_time} phút (không kể thời gian phát đề)")
                 style_run(run_time, bold=False, size=12) 
                 style_paragraph(p_time, line_spacing=1, space_after=0)
-                p_time.paragraph_format.tab_stops.add_tab_stop(Cm(15) - section.left_margin, WD_TAB_ALIGNMENT.CENTER)
 
                 doc.add_paragraph() 
 
