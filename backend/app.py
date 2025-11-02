@@ -11,7 +11,6 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
 import traceback 
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
-# (MỚI) Thêm thư viện TAB
 from docx.enum.text import WD_TAB_ALIGNMENT, WD_TAB_LEADER
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
@@ -311,6 +310,9 @@ def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_a
 
 @app.route('/mix', methods=['POST'])
 def handle_mix():
+    # (SỬA LỖI) Thêm dòng định nghĩa question_regex bị thiếu
+    question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
+        
     try:
         # 1. Xác thực người dùng
         auth_header = request.headers.get('Authorization')
@@ -377,7 +379,7 @@ def handle_mix():
                 
                 # Cột 1: Tên trường (Căn giữa)
                 cell_0 = table_header.cell(0, 0)
-                cell_0.width = Cm(9) # Đặt chiều rộng cho cột
+                cell_0.width = Cm(9) 
                 p_school = cell_0.paragraphs[0]
                 run_school = p_school.add_run(school_name)
                 style_run(run_school, bold=True, size=12) # (SỬA) Size 12
@@ -385,36 +387,28 @@ def handle_mix():
                 
                 # Cột 2: Thông tin kỳ thi (Tab 15cm)
                 cell_1 = table_header.cell(0, 1)
-                cell_1.width = Cm(10) # Đặt chiều rộng cho cột
+                cell_1.width = Cm(10) 
 
-                # (SỬA LỖI) Đặt Tab Stop cho CỘT 2, không phải cho từng đoạn
-                tab_stops = cell_1.paragraphs[0].paragraph_format.tab_stops
-                # (SỬA) Căn phải, không phải căn giữa, và không cần trừ lề
-                tab_stop = tab_stops.add_tab_stop(Cm(19), WD_TAB_ALIGNMENT.RIGHT)
-
+                # (SỬA LỖI) Đặt Tab Stop cho CỘT 2, CĂN LỀ TRÁI
                 p_exam = cell_1.paragraphs[0]
-                run_exam = p_exam.add_run("\t" + exam_name) 
+                run_exam = p_exam.add_run(exam_name)
                 style_run(run_exam, bold=True, size=12) 
-                style_paragraph(p_exam, line_spacing=1, space_after=0)
+                style_paragraph(p_exam, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1, space_after=0) # (SỬA) Căn trái
                 
                 p_class = cell_1.add_paragraph()
-                p_class.paragraph_format.tab_stops.add_tab_stop(Cm(19), WD_TAB_ALIGNMENT.RIGHT)
-                run_class = p_class.add_run(f"\tLỚP: {class_name}")
+                run_class = p_class.add_run(f"LỚP: {class_name}")
                 style_run(run_class, bold=True, size=12) 
-                style_paragraph(p_class, line_spacing=1, space_after=0)
-
+                style_paragraph(p_class, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1, space_after=0) # (SỬA) Căn trái
                 
                 p_subject = cell_1.add_paragraph()
-                p_subject.paragraph_format.tab_stops.add_tab_stop(Cm(19), WD_TAB_ALIGNMENT.RIGHT)
-                run_subject = p_subject.add_run(f"\tTên học phần: {subject_name} (Lần {exam_iteration})")
+                run_subject = p_subject.add_run(f"Tên học phần: {subject_name} (Lần {exam_iteration})")
                 style_run(run_subject, bold=False, size=12) 
-                style_paragraph(p_subject, line_spacing=1, space_after=0)
+                style_paragraph(p_subject, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1, space_after=0) # (SỬA) Căn trái
 
                 p_time = cell_1.add_paragraph()
-                p_time.paragraph_format.tab_stops.add_tab_stop(Cm(19), WD_TAB_ALIGNMENT.RIGHT)
-                run_time = p_time.add_run(f"\tThời gian: {exam_time} phút (không kể thời gian phát đề)")
+                run_time = p_time.add_run(f"Thời gian: {exam_time} phút (không kể thời gian phát đề)")
                 style_run(run_time, bold=False, size=12) 
-                style_paragraph(p_time, line_spacing=1, space_after=0)
+                style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1, space_after=0) # (SỬA) Căn trái
 
                 doc.add_paragraph() 
 
