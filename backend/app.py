@@ -11,8 +11,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
 import traceback 
 from docx.shared import Cm 
-# (MỚI) Import các thư viện xử lý bảng và footer
-from docx.enum.table import WD_ALIGN_TABLE, WD_CELL_VERTICAL_ALIGN
+# (SỬA LỖI) Sửa tên thư viện từ WD_ALIGN_TABLE thành WD_TABLE_ALIGNMENT
+from docx.enum.table import WD_TABLE_ALIGNMENT, WD_CELL_VERTICAL_ALIGN
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
@@ -194,14 +194,11 @@ def create_footer(doc, total_questions):
     section = doc.sections[0]
     footer = section.footer
     
-    # Xóa mọi thứ cũ trong footer
     for p in footer.paragraphs:
         p.clear()
         
-    # Thêm 1 bảng 2 cột
     footer_table = footer.add_table(rows=1, cols=2, width=doc.sections[0].page_width - doc.sections[0].left_margin - doc.sections[0].right_margin)
     
-    # Cột 1: Ghi chú
     cell_0 = footer_table.cell(0, 0)
     p_0 = cell_0.paragraphs[0]
     p_0.alignment = WD_ALIGN_PARAGRAPH.LEFT
@@ -210,12 +207,10 @@ def create_footer(doc, total_questions):
     run.font.size = Pt(11)
     run.font.italic = True
 
-    # Cột 2: Số trang
     cell_1 = footer_table.cell(0, 1)
     p_1 = cell_1.paragraphs[0]
     p_1.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     
-    # Thêm trường PAGE (Trang hiện tại)
     run = p_1.add_run("Trang ")
     run.font.name = 'Times New Roman'
     run.font.size = Pt(11)
@@ -230,12 +225,10 @@ def create_footer(doc, total_questions):
     fldChar.set(qn('w:fldCharType'), 'end')
     run._r.append(fldChar)
 
-    # Thêm dấu "/"
     run = p_1.add_run("/")
     run.font.name = 'Times New Roman'
     run.font.size = Pt(11)
 
-    # Thêm trường NUMPAGES (Tổng số trang)
     fldChar = OxmlElement('w:fldChar')
     fldChar.set(qn('w:fldCharType'), 'begin')
     run._r.append(fldChar)
@@ -247,7 +240,6 @@ def create_footer(doc, total_questions):
     fldChar.set(qn('w:fldCharType'), 'end')
     run._r.append(fldChar)
     
-    # Thêm đường kẻ ngang
     p_line = footer.add_paragraph()
     p_line.paragraph_format.borders[docx.enum.text.WD_BORDER_TYPE.TOP].set(docx.enum.text.WD_LINE_STYLE.SINGLE, Pt(1), 0, 'auto')
     
@@ -283,7 +275,6 @@ def handle_mix():
         data = request.json
         num_tests = int(data.get('num_tests', 2))
         base_name = data.get('base_name', 'VLT').upper()
-        # (MỚI) Lấy 7 thông tin header
         header_data = data.get('header_data', {})
         school_name = header_data.get('school_name', '').upper()
         exam_name = header_data.get('exam_name', '').upper()
@@ -326,14 +317,12 @@ def handle_mix():
                 table_header = doc.add_table(rows=1, cols=2)
                 table_header.autofit = True
                 
-                # Cột 1: Tên trường (Căn giữa)
                 cell_0 = table_header.cell(0, 0)
                 p_school = cell_0.paragraphs[0]
                 run_school = p_school.add_run(school_name)
                 style_run(run_school, bold=True, size=13)
                 style_paragraph(p_school, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=0)
                 
-                # Cột 2: Thông tin kỳ thi (Căn phải)
                 cell_1 = table_header.cell(0, 1)
                 
                 p_exam = cell_1.paragraphs[0]
@@ -348,15 +337,15 @@ def handle_mix():
                 
                 p_subject = cell_1.add_paragraph()
                 run_subject = p_subject.add_run(f"Tên học phần: {subject_name} (Lần {exam_iteration})")
-                style_run(run_subject, bold=False, size=13) # Không in đậm
+                style_run(run_subject, bold=False, size=13) 
                 style_paragraph(p_subject, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
 
                 p_time = cell_1.add_paragraph()
                 run_time = p_time.add_run(f"Thời gian: {exam_time} phút (không kể thời gian phát đề)")
-                style_run(run_time, bold=False, size=13) # Không in đậm
+                style_run(run_time, bold=False, size=13) 
                 style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
 
-                doc.add_paragraph() # Thêm một khoảng trống
+                doc.add_paragraph() 
 
                 # --- (MỚI) TẠO THÔNG TIN ĐỀ SỐ ---
                 doc_text = "(HSSV không được sử dụng tài liệu)" if not allow_documents else "(HSSV được sử dụng tài liệu)"
@@ -367,7 +356,7 @@ def handle_mix():
                 style_run(run_doc, bold=False, size=13)
                 style_paragraph(p_de, line_spacing=1.15, space_after=0)
 
-                doc.add_paragraph() # Thêm một khoảng trống
+                doc.add_paragraph() 
 
                 # --- (MỚI) TẠO TIÊU ĐỀ "NỘI DUNG" ---
                 p_title = doc.add_paragraph()
@@ -389,7 +378,6 @@ def handle_mix():
                         question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
                         clean_question_text = question_regex.sub("", q['question_text']).strip()
                         
-                        # --- (SỬA) ĐỊNH DẠNG CÂU HỎI ---
                         p_q = doc.add_paragraph()
                         style_paragraph(p_q, line_spacing=1.15, space_after=0)
                         
@@ -409,10 +397,10 @@ def handle_mix():
                         answer_prefixes = ['A', 'B', 'C', 'D']
                         found_correct_answer = False 
                         
-                        # --- (SỬA) TẠO BẢNG 2 CỘT CHO ĐÁP ÁN ---
                         table_ans = doc.add_table(rows=2, cols=2)
                         table_ans.autofit = True
-                        table_ans.alignment = WD_ALIGN_TABLE.CENTER
+                        # (SỬA LỖI) Sửa tên biến
+                        table_ans.alignment = WD_TABLE_ALIGNMENT.CENTER 
                         
                         ans_cells = [table_ans.cell(0,0), table_ans.cell(0,1), table_ans.cell(1,0), table_ans.cell(1,1)]
                         
@@ -439,7 +427,7 @@ def handle_mix():
                             answer_key_map[test_code].append('?') 
 
                 # --- (MỚI) TẠO KHỐI KÝ TÊN ---
-                doc.add_paragraph() # Khoảng trống
+                doc.add_paragraph() 
                 p_date = doc.add_paragraph()
                 run_date = p_date.add_run("Cần Thơ, ngày... tháng... năm...")
                 style_run(run_date, italic=True)
