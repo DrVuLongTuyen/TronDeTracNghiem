@@ -11,8 +11,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
 import traceback 
 from docx.shared import Cm 
-# (SỬA LỖI) Sửa tên thư viện từ WD_ALIGN_TABLE thành WD_TABLE_ALIGNMENT
-from docx.enum.table import WD_TABLE_ALIGNMENT, WD_CELL_VERTICAL_ALIGN
+# (SỬA LỖI) Sửa tên thư viện từ WD_CELL_VERTICAL_ALIGN thành WD_ALIGN_VERTICAL
+from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
@@ -399,7 +399,6 @@ def handle_mix():
                         
                         table_ans = doc.add_table(rows=2, cols=2)
                         table_ans.autofit = True
-                        # (SỬA LỖI) Sửa tên biến
                         table_ans.alignment = WD_TABLE_ALIGNMENT.CENTER 
                         
                         ans_cells = [table_ans.cell(0,0), table_ans.cell(0,1), table_ans.cell(1,0), table_ans.cell(1,1)]
@@ -408,7 +407,8 @@ def handle_mix():
                             new_prefix = answer_prefixes[j] 
                             
                             p_ans = ans_cells[j].paragraphs[0]
-                            ans_cells[j].vertical_alignment = WD_CELL_VERTICAL_ALIGN.TOP
+                            # (SỬA LỖI) Sửa tên biến
+                            ans_cells[j].vertical_alignment = WD_ALIGN_VERTICAL.TOP 
                             
                             style_paragraph(p_ans, line_spacing=1.15, space_after=0)
                             p_ans.paragraph_format.left_indent = Cm(0.5)
