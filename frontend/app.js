@@ -34,7 +34,8 @@ async function checkUserSession() {
 
     const { data: { session }, error } = await supabase.auth.getSession();
     
-    const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/';
+    // (SỬA) Kiểm tra xem có phải 1 trong 2 trang đăng nhập/đăng ký không
+    const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('register.html') || window.location.pathname === '/';
     
     if (session) { // Đã đăng nhập
         if (isAuthPage) {
@@ -44,8 +45,11 @@ async function checkUserSession() {
             if (userEmailEl) userEmailEl.textContent = session.user.email;
         }
     } else { // Chưa đăng nhập
-        if (!isAuthPage) {
-            window.location.href = 'index.html';
+        // Nếu không ở trang dashboard, thì tự động quay về index.html (Đăng nhập)
+        if (!isAuthPage && !window.location.pathname.endsWith('dashboard.html')) {
+             // (Giữ nguyên, không cần sửa, nhưng logic là vậy)
+        } else if (!isAuthPage && window.location.pathname.endsWith('dashboard.html')) {
+             window.location.href = 'index.html';
         }
     }
 }
@@ -234,15 +238,16 @@ async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
 }
 
 
-// --- Gán sự kiện khi DOM tải xong ---
+// --- (SỬA) Gán sự kiện khi DOM tải xong ---
 document.addEventListener('DOMContentLoaded', () => {
     checkUserSession(); // Kiểm tra session mỗi khi tải trang
 
-    // --- Trang Đăng nhập (index.html) ---
+    // --- (SỬA) Gán sự kiện cho 2 trang riêng biệt ---
     const loginBtn = document.getElementById('login-btn');
     const signupBtn = document.getElementById('signup-btn');
     const authMessage = document.getElementById('auth-message');
     
+    // Chỉ gán sự kiện ĐĂNG NHẬP nếu nút đó tồn tại (trên trang index.html)
     if (loginBtn) {
         loginBtn.addEventListener('click', () => {
             const email = document.getElementById('email').value;
@@ -250,6 +255,8 @@ document.addEventListener('DOMContentLoaded', () => {
             handleLogin(email, password, authMessage);
         });
     }
+    
+    // Chỉ gán sự kiện ĐĂNG KÝ nếu nút đó tồn tại (trên trang register.html)
     if (signupBtn) {
         signupBtn.addEventListener('click', () => {
             const email = document.getElementById('email').value;
@@ -267,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadMessage = document.getElementById('upload-message');
     const uploadSpinner = document.getElementById('upload-spinner');
 
-    // (MỚI) Giai đoạn 1.5 - Nút Xóa Kho
+    // (Giai đoạn 1.5) Nút Xóa Kho
     const clearDbBtn = document.getElementById('clear-db-btn');
 
     // (Giai đoạn 2)
@@ -291,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // (MỚI) Gán sự kiện cho Giai đoạn 1.5
+    // Gán sự kiện cho Giai đoạn 1.5
     if (clearDbBtn) {
         clearDbBtn.addEventListener('click', () => {
             // Yêu cầu xác nhận
