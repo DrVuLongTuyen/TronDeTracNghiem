@@ -221,14 +221,21 @@ async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
     
     // 1. Lấy thông tin Giai đoạn 2
     const numTests = document.getElementById('num-tests-input').value;
-    const baseName = document.getElementById('base-name-input').value || 'VLT';
+    // (SỬA) Lấy placeholder nếu baseName trống
+    const baseNameEl = document.getElementById('base-name-input');
+    const baseName = baseNameEl.value.toUpperCase() || baseNameEl.placeholder;
 
-    // 2. (MỚI) Lấy 7 thông tin Giai đoạn 3
+    // 2. (SỬA) Lấy 7 thông tin Giai đoạn 3 (lấy placeholder nếu trống)
+    const schoolNameEl = document.getElementById('school-name');
+    const examNameEl = document.getElementById('exam-name');
+    const classNameEl = document.getElementById('class-name');
+    const subjectNameEl = document.getElementById('subject-name');
+
     const headerData = {
-        school_name: document.getElementById('school-name').value,
-        exam_name: document.getElementById('exam-name').value,
-        class_name: document.getElementById('class-name').value,
-        subject_name: document.getElementById('subject-name').value,
+        school_name: schoolNameEl.value.toUpperCase() || schoolNameEl.placeholder,
+        exam_name: examNameEl.value.toUpperCase() || examNameEl.placeholder,
+        class_name: classNameEl.value.toUpperCase() || classNameEl.placeholder,
+        subject_name: subjectNameEl.value || subjectNameEl.placeholder,
         exam_iteration: document.getElementById('exam-iteration').value,
         exam_time: document.getElementById('exam-time').value,
         allow_documents: document.getElementById('allow-documents').checked
