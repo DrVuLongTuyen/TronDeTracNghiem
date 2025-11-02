@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - Trộn Đề TN</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Trộn Đề Trắc Nghiệm</h1>
+        <div id="auth-form">
+            <h2>Đăng ký tài khoản</h2>
+            <input type="email" id="email" placeholder="Nhập email của bạn" required>
+            <input type="password" id="password" placeholder="Nhập mật khẩu (ít nhất 6 ký tự)" required>
+            
+            <button id="signup-btn">Đăng ký</button>
+            
+            <p id="auth-message"></p>
+
+            <p style="margin-top: 20px; text-align: center; font-size: 14px;">
+                Đã có tài khoản? <a href="index.html">Đăng nhập ngay</a>
+            </p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+</html>
