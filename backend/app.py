@@ -6,12 +6,13 @@ import random
 import io       
 import zipfile  
 from docx import Document 
-from docx.shared import Pt 
+from docx.shared import Pt, Cm 
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
 import traceback 
-from docx.shared import Cm 
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
+# (MỚI) Thêm thư viện TAB
+from docx.enum.text import WD_TAB_ALIGNMENT, WD_TAB_LEADER
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
@@ -203,7 +204,7 @@ def set_paragraph_border(paragraph):
     pBdr.append(topBdr)
     pPr.append(pBdr)
 
-# --- (MỚI) HÀM TẠO FOOTER (CHÂN TRANG) ---
+# --- (SỬA LỖI) HÀM TẠO FOOTER (CHÂN TRANG) ---
 def create_footer(doc, total_questions):
     section = doc.sections[0]
     footer = section.footer
@@ -211,15 +212,39 @@ def create_footer(doc, total_questions):
     for p in footer.paragraphs:
         p.clear()
         
+    # (SỬA) 1. Thêm đường kẻ ngang LÊN TRÊN
+    p_line = footer.add_paragraph()
+    set_paragraph_border(p_line)
+    
+    # 2. Thêm bảng 2 cột BÊN DƯỚI đường kẻ
     footer_table = footer.add_table(rows=1, cols=2, width=doc.sections[0].page_width - doc.sections[0].left_margin - doc.sections[0].right_margin)
     
     cell_0 = footer_table.cell(0, 0)
     p_0 = cell_0.paragraphs[0]
     p_0.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    run = p_0.add_run(f"Ghi chú: Đề thi gồm {total_questions} câu")
+    
+    # (MỚI) Thêm trường NUMPAGES (Tổng số trang) vào Ghi chú
+    run = p_0.add_run(f"Ghi chú: Đề thi gồm {total_questions} câu, được in trên ")
     run.font.name = 'Times New Roman'
     run.font.size = Pt(11)
     run.font.italic = True
+    
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'begin')
+    run._r.append(fldChar)
+    instrText = OxmlElement('w:instrText')
+    instrText.set(qn('xml:space'), 'preserve')
+    instrText.text = 'NUMPAGES'
+    run._r.append(instrText)
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'end')
+    run._r.append(fldChar)
+    
+    run = p_0.add_run(" trang giấy A4")
+    run.font.name = 'Times New Roman'
+    run.font.size = Pt(11)
+    run.font.italic = True
+
 
     cell_1 = footer_table.cell(0, 1)
     p_1 = cell_1.paragraphs[0]
@@ -254,10 +279,6 @@ def create_footer(doc, total_questions):
     fldChar.set(qn('w:fldCharType'), 'end')
     run._r.append(fldChar)
     
-    # (SỬA LỖI) Sửa lại cách tạo đường kẻ
-    p_line = footer.add_paragraph()
-    set_paragraph_border(p_line) # Gọi hàm mới để tạo đường kẻ
-    
 # --- (MỚI) HÀM STYLE CHUNG ---
 def style_run(run, bold=False, italic=False, size=13):
     run.font.name = 'Times New Roman'
@@ -265,11 +286,12 @@ def style_run(run, bold=False, italic=False, size=13):
     run.font.bold = bold
     run.font.italic = italic
     
-def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_after=0):
+def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_after=0, page_break_before=False):
     p.paragraph_format.alignment = align
     p.paragraph_format.line_spacing = line_spacing
     p.paragraph_format.space_after = Pt(space_after)
     p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.page_break_before = page_break_before # (MỚI) Sửa lỗi ngắt trang
 
 # --- (NÂNG CẤP LỚN) ENDPOINT TRỘN ĐỀ (GIAI ĐOẠN 3) ---
 
@@ -328,37 +350,53 @@ def handle_mix():
                 
                 doc = Document() 
                 
-                # --- (MỚI) TẠO HEADER THEO MẪU ---
+                # --- (SỬA LỖI) SET LỀ (MARGINS) 1CM ---
+                section = doc.sections[0]
+                section.left_margin = Cm(1)
+                section.right_margin = Cm(1)
+                section.top_margin = Cm(1)
+                section.bottom_margin = Cm(1)
+                
+                # --- (SỬA LỖI) TẠO HEADER THEO MẪU (VỚI TAB 12CM) ---
                 table_header = doc.add_table(rows=1, cols=2)
                 table_header.autofit = True
                 
+                # Cột 1: Tên trường (Căn giữa)
                 cell_0 = table_header.cell(0, 0)
                 p_school = cell_0.paragraphs[0]
                 run_school = p_school.add_run(school_name)
-                style_run(run_school, bold=True, size=13)
+                style_run(run_school, bold=True, size=12) # (SỬA) Size 12
                 style_paragraph(p_school, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=0)
                 
+                # Cột 2: Thông tin kỳ thi (Tab 12cm)
                 cell_1 = table_header.cell(0, 1)
                 
+                # Thêm 1 Tab Căn Giữa ở mốc 12cm
+                tab_stops = cell_1.paragraphs[0].paragraph_format.tab_stops
+                tab_stop = tab_stops.add_tab_stop(Cm(12), WD_TAB_ALIGNMENT.CENTER)
+
                 p_exam = cell_1.paragraphs[0]
-                run_exam = p_exam.add_run(exam_name)
-                style_run(run_exam, bold=True, size=13)
-                style_paragraph(p_exam, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
+                run_exam = p_exam.add_run("\t" + exam_name) # Thêm \t (Tab)
+                style_run(run_exam, bold=True, size=12) # (SỬA) Size 12
+                style_paragraph(p_exam, line_spacing=1, space_after=0)
                 
                 p_class = cell_1.add_paragraph()
-                run_class = p_class.add_run(f"LỚP: {class_name}")
-                style_run(run_class, bold=True, size=13)
-                style_paragraph(p_class, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
+                p_class.paragraph_format.tab_stops.add_tab_stop(Cm(12), WD_TAB_ALIGNMENT.CENTER)
+                run_class = p_class.add_run(f"\tLỚP: {class_name}")
+                style_run(run_class, bold=True, size=12) # (SỬA) Size 12
+                style_paragraph(p_class, line_spacing=1, space_after=0)
                 
                 p_subject = cell_1.add_paragraph()
-                run_subject = p_subject.add_run(f"Tên học phần: {subject_name} (Lần {exam_iteration})")
-                style_run(run_subject, bold=False, size=13) 
-                style_paragraph(p_subject, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
+                p_subject.paragraph_format.tab_stops.add_tab_stop(Cm(12), WD_TAB_ALIGNMENT.CENTER)
+                run_subject = p_subject.add_run(f"\tTên học phần: {subject_name} (Lần {exam_iteration})")
+                style_run(run_subject, bold=False, size=12) # (SỬA) Size 12
+                style_paragraph(p_subject, line_spacing=1, space_after=0)
 
                 p_time = cell_1.add_paragraph()
-                run_time = p_time.add_run(f"Thời gian: {exam_time} phút (không kể thời gian phát đề)")
-                style_run(run_time, bold=False, size=13) 
-                style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
+                p_time.paragraph_format.tab_stops.add_tab_stop(Cm(12), WD_TAB_ALIGNMENT.CENTER)
+                run_time = p_time.add_run(f"\tThời gian: {exam_time} phút (không kể thời gian phát đề)")
+                style_run(run_time, bold=False, size=12) # (SỬA) Size 12
+                style_paragraph(p_time, line_spacing=1, space_after=0)
 
                 doc.add_paragraph() 
 
@@ -377,8 +415,8 @@ def handle_mix():
                 p_title = doc.add_paragraph()
                 run_title = p_title.add_run("NỘI DUNG ĐỀ THI")
                 style_run(run_title, bold=True, size=13)
-                style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10))
-
+                # (SỬA LỖI) Tắt ngắt trang
+                style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10), page_break_before=False)
                 
                 question_counter = 1
                 sorted_group_tags = sorted(groups.keys())
@@ -391,10 +429,11 @@ def handle_mix():
                     
                     for q in question_list:
                         question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
-                        clean_question_text = question_regex.sub("", q['question_text']).strip()
+                        clean_question_text = q['question_text'].replace(question_regex.match(q['question_text']).group(0), "")
                         
                         p_q = doc.add_paragraph()
-                        style_paragraph(p_q, line_spacing=1.15, space_after=0)
+                        # (SỬA LỖI) Căn đều + Tắt ngắt trang
+                        style_paragraph(p_q, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0, page_break_before=False)
                         
                         run_prefix = p_q.add_run(f"Câu {question_counter}: ")
                         style_run(run_prefix, bold=True) 
@@ -424,7 +463,8 @@ def handle_mix():
                             p_ans = ans_cells[j].paragraphs[0]
                             ans_cells[j].vertical_alignment = WD_ALIGN_VERTICAL.TOP 
                             
-                            style_paragraph(p_ans, line_spacing=1.15, space_after=0)
+                            # (SỬA LỖI) Căn đều
+                            style_paragraph(p_ans, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0)
                             p_ans.paragraph_format.left_indent = Cm(0.5)
                             
                             run_p_prefix = p_ans.add_run(f"{new_prefix}. ")
@@ -440,22 +480,30 @@ def handle_mix():
                         if not found_correct_answer:
                             answer_key_map[test_code].append('?') 
 
-                # --- (MỚI) TẠO KHỐI KÝ TÊN ---
+                # --- (SỬA LỖI) TẠO KHỐI KÝ TÊN (Tab 12cm) ---
                 doc.add_paragraph() 
+                
+                # Căn giữa tại 12cm
+                tab_stops_signer = doc.add_paragraph().paragraph_format.tab_stops
+                tab_stop_signer = tab_stops_signer.add_tab_stop(Cm(12), WD_TAB_ALIGNMENT.CENTER)
+
                 p_date = doc.add_paragraph()
-                run_date = p_date.add_run("Cần Thơ, ngày... tháng... năm...")
+                p_date.paragraph_format.tab_stops.add_tab_stop(Cm(12), WD_TAB_ALIGNMENT.CENTER)
+                run_date = p_date.add_run("\tCần Thơ, ngày... tháng... năm...")
                 style_run(run_date, italic=True)
-                style_paragraph(p_date, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1.15, space_after=0)
+                style_paragraph(p_date, line_spacing=1.15, space_after=0)
 
                 p_signer = doc.add_paragraph()
-                run_signer = p_signer.add_run("Giảng viên tổng hợp đề")
+                p_signer.paragraph_format.tab_stops.add_tab_stop(Cm(12), WD_TAB_ALIGNMENT.CENTER)
+                run_signer = p_signer.add_run("\tGiảng viên tổng hợp đề")
                 style_run(run_signer, bold=True)
-                style_paragraph(p_signer, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1.15, space_after=0)
+                style_paragraph(p_signer, line_spacing=1.15, space_after=0)
 
                 p_name = doc.add_paragraph()
-                run_name = p_name.add_run("(Ký, ghi rõ họ tên)")
+                p_name.paragraph_format.tab_stops.add_tab_stop(Cm(12), WD_TAB_ALIGNMENT.CENTER)
+                run_name = p_name.add_run("\t(Ký, ghi rõ họ tên)")
                 style_run(run_name, italic=True)
-                style_paragraph(p_name, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1.15, space_after=0)
+                style_paragraph(p_name, line_spacing=1.15, space_after=0)
                 
                 # --- (MỚI) TẠO FOOTER ---
                 create_footer(doc, question_counter - 1)
