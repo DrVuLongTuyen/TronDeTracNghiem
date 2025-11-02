@@ -186,3 +186,24 @@ button:disabled {
 .button-danger:hover {
     background-color: #c82333;
 }
+
+/* --- CSS CHO TRANG ĐĂNG KÝ MỚI --- */
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.form-label {
+    font-size: 14px;
+    color: #333;
+    font-weight: bold;
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
