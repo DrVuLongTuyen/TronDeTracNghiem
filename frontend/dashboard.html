@@ -35,6 +35,45 @@
             <div id="upload-spinner" class="spinner" style="display: none;"></div>
             <p id="upload-message"></p>
         </div>
+
+        <div id="header-info-section">
+        <h2 style="color: #007bff;">Thông tin Tiêu đề Đề thi (Tùy chọn)</h2>
+        <p style="font-size: 14px; color: #555;"><i>(Điền các thông tin này để tệp .docx đầu ra có tiêu đề giống như mẫu)</i></p>
+
+        <div class="form-group">
+            <label for="school-name">1. Tên trường (In hoa):</label>
+            <input type="text" id="school-name" placeholder="TRƯỜNG ĐẠI HỌC NAM CẦN THƠ">
+        </div>
+        <div class="form-group">
+            <label for="exam-name">2. Tên kỳ thi (In hoa):</label>
+            <input type="text" id="exam-name" placeholder="KỲ THI KẾT THÚC HỌC PHẦN">
+        </div>
+        <div class="form-group">
+            <label for="class-name">3. Lớp (In hoa):</label>
+            <input type="text" id="class-name" placeholder="DH20YKH06">
+        </div>
+        <div class="form-group">
+            <label for="subject-name">4. Tên học phần:</label>
+            <input type="text" id="subject-name" placeholder="Kỹ năng nghề nghiệp">
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="width: 48%;">
+                <label for="exam-iteration">5. Lần thi (Nhập số):</label>
+                <input type="number" id="exam-iteration" value="1" min="1">
+            </div>
+            <div class="form-group" style="width: 48%;">
+                <label for="exam-time">6. Thời gian (Nhập số phút):</label>
+                <input type="number" id="exam-time" value="90" min="15">
+            </div>
+        </div>
+        <div class="form-group">
+            <label style="display: inline-block; margin-right: 10px;">
+                <input type="checkbox" id="allow-documents" style="width: auto;">
+                7. Cho phép sử dụng tài liệu?
+            </label>
+        </div>
+    </div>
+        
         <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
 
         <div id="mix-section">
@@ -70,6 +109,7 @@
     <script src="app.js"></script>
 </body>
 </html>
+
 
 
 
