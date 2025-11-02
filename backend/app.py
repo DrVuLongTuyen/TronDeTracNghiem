@@ -297,7 +297,7 @@ def style_run(run, bold=False, italic=False, size=13):
     run.font.bold = bold
     run.font.italic = italic
     
-# (SỬA LỖI) Sửa lại hàm style_paragraph để gọi đúng
+# (SỬA LỖI) Sửa lại hàm style_paragraph để gọi đúng (space_before ở cuối)
 def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_after=0, page_break_before=False, keep_with_next=False, space_before=0):
     p.paragraph_format.alignment = align
     p.paragraph_format.line_spacing = line_spacing
@@ -395,22 +395,22 @@ def handle_mix():
                 p_exam = cell_1.paragraphs[0]
                 run_exam = p_exam.add_run(exam_name)
                 style_run(run_exam, bold=True, size=12) 
-                style_paragraph(p_exam, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
+                style_paragraph(p_exam, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0) # (SỬA) Căn trái
                 
                 p_class = cell_1.add_paragraph()
                 run_class = p_class.add_run(f"LỚP: {class_name}")
                 style_run(run_class, bold=True, size=12) 
-                style_paragraph(p_class, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
+                style_paragraph(p_class, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0) # (SỬA) Căn trái
                 
                 p_subject = cell_1.add_paragraph()
                 run_subject = p_subject.add_run(f"Tên học phần: {subject_name} (Lần {exam_iteration})")
                 style_run(run_subject, bold=False, size=12) 
-                style_paragraph(p_subject, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
+                style_paragraph(p_subject, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0) # (SỬA) Căn trái
 
                 p_time = cell_1.add_paragraph()
                 run_time = p_time.add_run(f"Thời gian: {exam_time} phút (không kể thời gian phát đề)")
                 style_run(run_time, bold=False, size=12) 
-                style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
+                style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0) # (SỬA) Căn trái
 
                 doc.add_paragraph() 
 
