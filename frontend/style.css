@@ -72,7 +72,7 @@ button:disabled {
 #logout-btn:hover {
     background-color: #c82333;
 }
-#auth-message, #upload-message {
+#auth-message, #upload-message, #mix-message { /* (Sửa) Thêm mix-message */
     margin-top: 15px;
     font-size: 14px;
     word-wrap: break-word;
@@ -99,8 +99,6 @@ button:disabled {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-
-    
 }
 
 /* --- CSS CHO GIAI ĐOẠN 2 --- */
@@ -172,21 +170,6 @@ button:disabled {
     background-color: #c82333;
 }
 
-/* --- CSS CHO NÚT XÓA --- */
-.button-danger {
-    background-color: #dc3545; /* Màu đỏ */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-top: 10px;
-}
-.button-danger:hover {
-    background-color: #c82333;
-}
-
 /* --- CSS CHO TRANG ĐĂNG KÝ MỚI --- */
 .form-row {
     display: flex;
@@ -236,34 +219,6 @@ select {
     margin-right: 5px;
 }
 
-/* --- CSS CHO KHUNG THÔNG TIN HEADER --- */
-#header-info-section {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-#header-info-section label {
-    font-weight: bold;
-    color: #333;
-}
-
-#header-info-section input[type="text"],
-#header-info-section input[type="number"] {
-    width: calc(100% - 22px); /* 100% - padding*2 - border*2 */
-    padding: 10px;
-    margin-top: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-#header-info-section input[type="checkbox"] {
-    width: auto;
-    margin-right: 5px;
-}
-
 /* --- CSS CHO CHECKBOX LỚN --- */
 .large-checkbox {
     transform: scale(2); /* Phóng to 2x */
@@ -271,4 +226,14 @@ select {
     vertical-align: middle; /* Căn giữa với dòng chữ */
     width: auto !important; /* Ghi đè style input[type="file"] */
     cursor: pointer;
+}
+
+/* --- CSS CHO LOGO --- */
+.logo-image {
+    display: block;
+    width: 120px; /* Kích thước logo */
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 10px;
 }
