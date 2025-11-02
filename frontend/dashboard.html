@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng điều khiển - Trộn Đề TN</title>
-    <link rel="stylesheet" href="style.css">
-<link rel="icon" href="logo.png" type="image/png">
+    <link rel="icon" href="logo.png" type="image/png">
     <meta property="og:title" content="Trộn Đề Trắc Nghiệm Thông Minh">
     <meta property="og:description" content="Nền tảng tạo đề hoán vị và đáp án tự động. Nhanh chóng, an toàn và miễn phí.">
     <meta property="og:image" content="https://trondetn.vltuyen.com/logo.png">
     <meta property="og:url" content="https://trondetn.vltuyen.com">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
-    ```
+    <title>Bảng điều khiển - Trộn Đề TN</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
@@ -24,10 +23,11 @@
 
         <div id="upload-section">
             <h2>Tải lên đề gốc (.docx)</h2>
+
             <button id="clear-db-btn" class="button-danger">Xóa toàn bộ kho câu hỏi cũ</button>
-    <p style="font-size: 14px; color: #555;"><i>(Lưu ý: Chỉ nhấn nút này khi bạn muốn upload một bộ đề MỚI HOÀN TOÀN.)</i></p>
+            <p style="font-size: 14px; color: #555;"><i>(Lưu ý: Chỉ nhấn nút này khi bạn muốn upload một bộ đề MỚI HOÀN TOÀN.)</i></p>
+
             <p>Định dạng theo mẫu (gạch chân đáp án đúng, dùng thẻ &lt;g1&gt;, &lt;g3&gt;...)</p>
-            
             <p style="font-size: 14px;"><a href="guide.html" target="_blank">Nhấn vào đây để xem hướng dẫn định dạng chi tiết</a></p>
             
             <input type="file" id="file-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
@@ -37,117 +37,35 @@
         </div>
 
         <div id="header-info-section">
-        <h2 style="color: #007bff;">Thông tin Tiêu đề Đề thi (Tùy chọn)</h2>
-        <p style="font-size: 14px; color: #555;"><i>(Điền các thông tin này để tệp .docx đầu ra có tiêu đề giống như mẫu)</i></p>
-
-        <div class="form-group">
-            <label for="school-name">1. Tên trường (In hoa):</label>
-            <input type="text" id="school-name" placeholder="TRƯỜNG ĐẠI HỌC NAM CẦN THƠ">
-        </div>
-        <div class="form-group">
-            <label for="exam-name">2. Tên kỳ thi (In hoa):</label>
-            <input type="text" id="exam-name" placeholder="KỲ THI KẾT THÚC HỌC PHẦN">
-        </div>
-        <div class="form-group">
-            <label for="class-name">3. Lớp (In hoa):</label>
-            <input type="text" id="class-name" placeholder="DH20YKH06">
-        </div>
-        <div class="form-group">
-            <label for="subject-name">4. Tên học phần:</label>
-            <input type="text" id="subject-name" placeholder="Kỹ năng nghề nghiệp">
-        </div>
-        <div class="form-row">
-            <div class="form-group" style="width: 48%;">
-                <label for="exam-iteration">5. Lần thi (Nhập số):</label>
-                <input type="number" id="exam-iteration" value="1" min="1">
-            </div>
-            <div class="form-group" style="width: 48%;">
-                <label for="exam-time">6. Thời gian (Nhập số phút):</label>
-                <input type="number" id="exam-time" value="90" min="15">
-            </div>
-        </div>
-        <div class="form-group">
-            <label style="display: inline-block; margin-right: 10px;">
-                <input type="checkbox" id="allow-documents" style="width: auto;">
-                7. Cho phép sử dụng tài liệu?
-            </label>
-        </div>
-    </div>
-
-        <div id="header-info-section">
-        <h2 style="color: #007bff;">Thông tin Tiêu đề Đề thi (Tùy chọn)</h2>
-        <p style="font-size: 14px; color: #555;"><i>(Điền các thông tin này để tệp .docx đầu ra có tiêu đề giống như mẫu)</i></p>
-
-        <div class="form-group">
-            <label for="school-name">1. Tên trường (In hoa):</label>
-            <input type="text" id="school-name" placeholder="TRƯỜNG ĐẠI HỌC NAM CẦN THƠ">
-        </div>
-        <div class="form-group">
-            <label for="exam-name">2. Tên kỳ thi (In hoa):</label>
-            <input type="text" id="exam-name" placeholder="KỲ THI KẾT THÚC HỌC PHẦN">
-        </div>
-        <div class="form-group">
-            <label for="class-name">3. Lớp (In hoa):</label>
-            <input type="text" id="class-name" placeholder="DH20YKH06">
-        </div>
-        <div class="form-group">
-            <label for="subject-name">4. Tên học phần:</label>
-            <input type="text" id="subject-name" placeholder="Kỹ năng nghề nghiệp">
-        </div>
-        <div class="form-row">
-            <div class="form-group" style="width: 48%;">
-                <label for="exam-iteration">5. Lần thi (Nhập số):</label>
-                <input type="number" id="exam-iteration" value="1" min="1">
-            </div>
-            <div class="form-group" style="width: 48%;">
-                <label for="exam-time">6. Thời gian (Nhập số phút):</label>
-                <input type="number" id="exam-time" value="90" min="15">
-            </div>
-        </div>
-        <div class="form-group">
-            <label style="display: inline-block; margin-right: 10px;">
-                <input type="checkbox" id="allow-documents" style="width: auto;">
-                7. Cho phép sử dụng tài liệu?
-            </label>
-        </div>
-    </div>
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
-
-        <div id="mix-section">
-            <h2>TẠO ĐỀ HOÁN VỊ (Tối đa 5 mã đề)</h2>
-
+            <h2 style="color: #007bff;">Thông tin Tiêu đề Đề thi (Tùy chọn)</h2>
+            <p style="font-size: 14px; color: #555;"><i>(Điền các thông tin này để tệp .docx đầu ra có tiêu đề giống như mẫu)</i></p>
+            
             <div class="form-group">
-                <label for="num-tests-input">Bạn muốn trộn thành bao nhiêu đề (2-5):</label>
-                <input type="number" id="num-tests-input" min="2" max="5" value="2">
+                <label for="school-name">1. Tên trường (In hoa):</label>
+                <input type="text" id="school-name" placeholder="TRƯỜNG ĐẠI HỌC NAM CẦN THƠ">
             </div>
-
             <div class="form-group">
-                <label for="base-name-input">Tên tệp tin tải về sẽ là:</label>
-                <input type="text" id="base-name-input" placeholder="VLT" style="width: 80px; text-transform: uppercase;">
-                <span>01 (số thứ tự)</span>
+                <label for="exam-name">2. Tên kỳ thi (In hoa):</label>
+                <input type="text" id="exam-name" placeholder="KỲ THI KẾT THÚC HỌC PHẦN">
             </div>
-
-            <p style="font-size: 14px; color: #555;">
-                <i>Ví dụ: Nhập 3 và VLT sẽ tạo ra 3 tệp: Mã_đề_VLT01.docx, Mã_đề_VLT02.docx, v.v.</i>
-            </p>
-
-            <button id="mix-btn">Bắt đầu trộn đề</button>
-
-            <a href="#" id="download-btn" class="button-download" style="display: none;">
-                Tải về (.zip)
-            </a>
-
-            <p id="mix-message"></p>
-        </div>
-
-        </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js"></script>
-</body>
-</html>
-
-
-
-
-
+            <div class="form-group">
+                <label for="class-name">3. Lớp (In hoa):</label>
+                <input type="text" id="class-name" placeholder="DH20YKH06">
+            </div>
+            <div class="form-group">
+                <label for="subject-name">4. Tên học phần:</label>
+                <input type="text" id="subject-name" placeholder="Kỹ năng nghề nghiệp">
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="width: 48%;">
+                    <label for="exam-iteration">5. Lần thi (Nhập số):</label>
+                    <input type="number" id="exam-iteration" value="1" min="1">
+                </div>
+                <div class="form-group" style="width: 48%;">
+                    <label for="exam-time">6. Thời gian (Nhập số phút):</label>
+                    <input type="number" id="exam-time" value="90" min="15">
+                </div>
+            </div>
+            <div class="form-group" style="text-align: left; margin-top: 15px;">
+                <label for="allow-documents" style="font-weight: bold; color: #333; display: inline; cursor: pointer;">
+                    7. Cho phép sử dụng
