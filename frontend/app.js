@@ -83,13 +83,10 @@ async function handleSignUp(msgEl) {
 
     try {
         // (SỬA) Gửi TẤT CẢ thông tin lên AUTH
-        // Trigger của Supabase (Bước 1) sẽ tự động sao chép qua bảng 'profiles'
         const { data, error } = await supabase.auth.signUp({
             email: email,
             password: password,
             options: {
-                // "data" là nơi Supabase cho phép chúng ta đính kèm
-                // thông tin Họ, Tên, v.v.
                 data: {
                     first_name: firstName,
                     last_name: lastName,
@@ -219,11 +216,25 @@ async function handleClearDatabase(msgEl, btnEl) {
     }
 }
 
-// --- Xử lý Trộn đề (Giai đoạn 2) ---
+// --- (SỬA) Xử lý Trộn đề (Giai đoạn 3) ---
 async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
+    
+    // 1. Lấy thông tin Giai đoạn 2
     const numTests = document.getElementById('num-tests-input').value;
     const baseName = document.getElementById('base-name-input').value || 'VLT';
 
+    // 2. (MỚI) Lấy 7 thông tin Giai đoạn 3
+    const headerData = {
+        school_name: document.getElementById('school-name').value,
+        exam_name: document.getElementById('exam-name').value,
+        class_name: document.getElementById('class-name').value,
+        subject_name: document.getElementById('subject-name').value,
+        exam_iteration: document.getElementById('exam-iteration').value,
+        exam_time: document.getElementById('exam-time').value,
+        allow_documents: document.getElementById('allow-documents').checked
+    };
+
+    // 3. Lấy token
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
         showMessage(msgEl, 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', true);
@@ -243,7 +254,8 @@ async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
             },
             body: JSON.stringify({
                 num_tests: numTests,
-                base_name: baseName
+                base_name: baseName,
+                header_data: headerData // (MỚI) Gửi 7 thông tin mới
             })
         });
 
@@ -284,22 +296,19 @@ function populateDateOfBirth() {
     const monthSelect = document.getElementById('dob-month');
     const yearSelect = document.getElementById('dob-year');
 
-    if (!daySelect || !monthSelect || !yearSelect) return; // Chỉ chạy nếu ở trang register.html
+    if (!daySelect || !monthSelect || !yearSelect) return; 
 
-    // Điền Ngày (mặc định 1)
     daySelect.options.add(new Option('Ngày', '01'));
     for (let i = 1; i <= 31; i++) {
-        daySelect.options.add(new Option(i, (i < 10 ? '0' + i : i))); // Thêm '0' cho ngày < 10
+        daySelect.options.add(new Option(i, (i < 10 ? '0' + i : i))); 
     }
-    // Điền Tháng (mặc định 1)
     monthSelect.options.add(new Option('Tháng', '01'));
     for (let i = 1; i <= 12; i++) {
-        monthSelect.options.add(new Option(i, (i < 10 ? '0' + i : i))); // Thêm '0' cho tháng < 10
+        monthSelect.options.add(new Option(i, (i < 10 ? '0' + i : i))); 
     }
-    // Điền Năm (mặc định 2000)
     const currentYear = new Date().getFullYear();
     yearSelect.options.add(new Option('Năm', '2000'));
-    for (let i = currentYear - 18; i >= currentYear - 100; i--) { // Giới hạn tuổi (ví dụ: > 18)
+    for (let i = currentYear - 18; i >= currentYear - 100; i--) { 
         yearSelect.options.add(new Option(i, i));
     }
 }
@@ -315,7 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const signupBtn = document.getElementById('signup-btn');
     const authMessage = document.getElementById('auth-message');
     
-    // Chỉ gán sự kiện ĐĂNG NHẬP (trên trang index.html)
     if (loginBtn) {
         loginBtn.addEventListener('click', () => {
             const email = document.getElementById('email').value;
@@ -324,10 +332,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Chỉ gán sự kiện ĐĂNG KÝ (trên trang register.html)
     if (signupBtn) {
         signupBtn.addEventListener('click', () => {
-            // Chỉ cần truyền vào msgEl, hàm sẽ tự lấy các giá trị
             handleSignUp(authMessage); 
         });
     }
