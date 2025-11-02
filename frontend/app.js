@@ -7,8 +7,12 @@ const API_BASE_URL = 'https://trondetn-api.onrender.com'; // Giữ nguyên URL A
 // ==================================================================
 
 const { createClient } = window.supabase;
+
 let supabase;
 try {
+    if (SUPABASE_URL.includes('YOUR_SUPABASE_URL')) {
+        console.warn("app.js: Supabase URL chưa được cấu hình.");
+    }
     supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch (error) {
     console.error("Lỗi khởi tạo Supabase:", error.message);
@@ -25,24 +29,26 @@ function showMessage(element, message, isError = false) {
 // --- Xử lý Session ---
 async function checkUserSession() {
     if (!supabase) return;
-    const { data: { session } } = await supabase.auth.getSession();
+
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
     const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('register.html') || window.location.pathname === '/';
     
-    if (session) { 
+    if (session) { // Đã đăng nhập
         if (isAuthPage) {
             window.location.href = 'dashboard.html';
         } else {
             const userEmailEl = document.getElementById('user-email');
             if (userEmailEl) userEmailEl.textContent = session.user.email;
         }
-    } else { 
+    } else { // Chưa đăng nhập
         if (!isAuthPage && window.location.pathname.endsWith('dashboard.html')) {
              window.location.href = 'index.html';
         }
     }
 }
 
-// --- (SỬA LẠI) Xử lý Đăng ký (Rất quan trọng) ---
+// --- (SỬA LẠI HOÀN TOÀN) Xử lý Đăng ký ---
 async function handleSignUp(msgEl) {
     // 1. Lấy tất cả dữ liệu từ form
     const email = document.getElementById('email').value;
@@ -76,35 +82,27 @@ async function handleSignUp(msgEl) {
     showMessage(msgEl, 'Đang xử lý...', false);
 
     try {
-        // VIỆC 1: Tạo tài khoản Auth (Email/Pass)
-        const { data: authData, error: authError } = await supabase.auth.signUp({ 
-            email, 
-            password 
+        // (SỬA) Gửi TẤT CẢ thông tin lên AUTH
+        // Trigger của Supabase (Bước 1) sẽ tự động sao chép qua bảng 'profiles'
+        const { data, error } = await supabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                // "data" là nơi Supabase cho phép chúng ta đính kèm
+                // thông tin Họ, Tên, v.v.
+                data: {
+                    first_name: firstName,
+                    last_name: lastName,
+                    gender: gender,
+                    dob: dob
+                }
+            }
         });
 
-        if (authError) {
-            throw authError; // Ném lỗi (sẽ được bắt ở dưới)
+        if (error) {
+            throw error; // Ném lỗi (sẽ được bắt ở dưới)
         }
-
-        if (!authData.user) {
-             throw new Error("Không thể tạo tài khoản, vui lòng thử lại.");
-        }
-
-        // VIỆC 2: Lưu thông tin cá nhân (Profile)
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-                id: authData.user.id, // Liên kết với user vừa tạo
-                first_name: firstName,
-                last_name: lastName,
-                gender: gender,
-                dob: dob
-            });
-
-        if (profileError) {
-            throw profileError; // Ném lỗi (sẽ được bắt ở dưới)
-        }
-
+        
         // 5. Thành công
         showMessage(msgEl, 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực.', false);
 
@@ -117,6 +115,7 @@ async function handleSignUp(msgEl) {
         }
     }
 }
+
 
 // --- Xử lý Đăng nhập ---
 async function handleLogin(email, password, msgEl) {
@@ -141,6 +140,144 @@ async function handleLogout() {
     else window.location.href = 'index.html';
 }
 
+// --- Xử lý Upload (Giai đoạn 1) ---
+async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
+    if (API_BASE_URL.includes('YOUR_RENDER_API_URL')) {
+         showMessage(msgEl, 'Lỗi: API Backend chưa được cấu hình trong app.js', true);
+         return;
+    }
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        showMessage(msgEl, 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', true);
+        window.location.href = 'index.html';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    showMessage(msgEl, 'Đang tải lên và xử lý...', false);
+    btnEl.disabled = true;
+    spinnerEl.style.display = 'inline-block';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${session.access_token}` },
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showMessage(msgEl, `${result.message}. Đã lưu ${result.questions_saved} câu hỏi.`, false);
+        } else {
+            showMessage(msgEl, `Lỗi: ${result.error || 'Lỗi không xác định từ server'}`, true);
+        }
+        
+    } catch (error) {
+        showMessage(msgEl, `Lỗi kết nối API: ${error.message}`, true);
+    } finally {
+        btnEl.disabled = false;
+        spinnerEl.style.display = 'none';
+        document.getElementById('file-input').value = '';
+    }
+}
+
+// --- Xử lý Xóa Kho ---
+async function handleClearDatabase(msgEl, btnEl) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        showMessage(msgEl, 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', true);
+        return;
+    }
+
+    showMessage(msgEl, 'Đang xóa dữ liệu cũ...', false);
+    btnEl.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/clear`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${session.access_token}`
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showMessage(msgEl, result.message, false);
+        } else {
+            showMessage(msgEl, `Lỗi: ${result.error}`, true);
+        }
+        
+    } catch (error) {
+        showMessage(msgEl, `Lỗi kết nối API: ${error.message}. Thử lại.`, true);
+    } finally {
+        btnEl.disabled = false;
+    }
+}
+
+// --- Xử lý Trộn đề (Giai đoạn 2) ---
+async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
+    const numTests = document.getElementById('num-tests-input').value;
+    const baseName = document.getElementById('base-name-input').value || 'VLT';
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+        showMessage(msgEl, 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', true);
+        return;
+    }
+
+    showMessage(msgEl, 'Đang trộn đề... Việc này có thể mất một phút...', false);
+    btnEl.disabled = true;
+    downloadBtnEl.style.display = 'none'; 
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/mix`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                num_tests: numTests,
+                base_name: baseName
+            })
+        });
+
+        if (response.ok) {
+            const contentDisposition = response.headers.get('content-disposition') || response.headers.get('Content-Disposition');
+            let downloadName = `Bo_de_tron_${baseName}.zip`; 
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                if (filenameMatch && filenameMatch.length > 1) {
+                    downloadName = filenameMatch[1];
+                }
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = URL.createObjectURL(blob);
+
+            downloadBtnEl.href = downloadUrl;
+            downloadBtnEl.download = downloadName; 
+            
+            downloadBtnEl.style.display = 'inline-block';
+            showMessage(msgEl, `Đã trộn xong ${numTests} đề! Nhấn nút 'Tải về' để lưu.`, false);
+
+        } else {
+            const result = await response.json();
+            showMessage(msgEl, `Lỗi: ${result.error || 'Lỗi không xác định từ server'}`, true);
+        }
+
+    } catch (error) {
+        showMessage(msgEl, `Lỗi kết nối API: ${error.message}. Vui lòng đợi 30 giây và thử lại.`, true);
+    } finally {
+        btnEl.disabled = false; 
+    }
+}
+
 // --- (MỚI) Hàm điền ngày tháng năm sinh ---
 function populateDateOfBirth() {
     const daySelect = document.getElementById('dob-day');
@@ -149,17 +286,20 @@ function populateDateOfBirth() {
 
     if (!daySelect || !monthSelect || !yearSelect) return; // Chỉ chạy nếu ở trang register.html
 
-    // Điền Ngày
+    // Điền Ngày (mặc định 1)
+    daySelect.options.add(new Option('Ngày', '01'));
     for (let i = 1; i <= 31; i++) {
-        daySelect.options.add(new Option(i, i));
+        daySelect.options.add(new Option(i, (i < 10 ? '0' + i : i))); // Thêm '0' cho ngày < 10
     }
-    // Điền Tháng
+    // Điền Tháng (mặc định 1)
+    monthSelect.options.add(new Option('Tháng', '01'));
     for (let i = 1; i <= 12; i++) {
-        monthSelect.options.add(new Option('Tháng ' + i, i));
+        monthSelect.options.add(new Option(i, (i < 10 ? '0' + i : i))); // Thêm '0' cho tháng < 10
     }
-    // Điền Năm
+    // Điền Năm (mặc định 2000)
     const currentYear = new Date().getFullYear();
-    for (let i = currentYear; i >= currentYear - 100; i--) {
+    yearSelect.options.add(new Option('Năm', '2000'));
+    for (let i = currentYear - 18; i >= currentYear - 100; i--) { // Giới hạn tuổi (ví dụ: > 18)
         yearSelect.options.add(new Option(i, i));
     }
 }
@@ -192,39 +332,44 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- (PHẦN DASHBOARD - Không cần sửa) ---
+    // --- Trang Dashboard (dashboard.html) ---
     const logoutBtn = document.getElementById('logout-btn');
     const uploadBtn = document.getElementById('upload-btn');
+    const fileInput = document.getElementById('file-input');
+    const uploadMessage = document.getElementById('upload-message');
+    const uploadSpinner = document.getElementById('upload-spinner');
     const clearDbBtn = document.getElementById('clear-db-btn');
     const mixBtn = document.getElementById('mix-btn');
+    const downloadBtn = document.getElementById('download-btn');
+    const mixMessage = document.getElementById('mix-message');
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', handleLogout);
     }
+    
     if (uploadBtn) {
         uploadBtn.addEventListener('click', () => {
-            // ... (code uploadBtn giữ nguyên) ...
+            const file = fileInput.files[0];
+            if (!file) {
+                showMessage(uploadMessage, 'Vui lòng chọn một tệp .docx', true);
+                return;
+            }
+            handleFileUpload(file, uploadMessage, uploadBtn, uploadSpinner);
         });
     }
+
     if (clearDbBtn) {
         clearDbBtn.addEventListener('click', () => {
-             // ... (code clearDbBtn giữ nguyên) ...
-        });
-    }
-    if (mixBtn) {
-        mixBtn.addEventListener('click', () => {
-             // ... (code mixBtn giữ nguyên) ...
+            if (!confirm('Bạn có chắc chắn muốn XÓA TOÀN BỘ kho câu hỏi hiện tại không? Hành động này không thể hoàn tác.')) {
+                return;
+            }
+            handleClearDatabase(uploadMessage, clearDbBtn);
         });
     }
     
-    // --- (XÓA CODE CŨ) ---
-    // (Toàn bộ code xử lý Giai đoạn 1, 1.5, 2 đã được chuyển vào hàm
-    // handle... riêng, nên phần code lặp lại ở đây có thể xóa đi
-    // để cho sạch. Tuy nhiên, để đảm bảo không lỗi, tôi sẽ
-    // giữ nguyên code app.js từ lần trước và CHỈ SỬA phần
-    // Đăng ký/Đăng nhập và thêm hàm populateDateOfBirth)
+    if (mixBtn) {
+        mixBtn.addEventListener('click', () => {
+            handleMixRequest(mixMessage, mixBtn, downloadBtn);
+        });
+    }
 });
-
-// --- (DÁN CODE app.js CŨ CỦA BẠN VÀO ĐÂY) ---
-// (Lưu ý: Tôi sẽ dán toàn bộ code cũ của bạn vào đây
-// và áp dụng các thay đổi ở trên)
