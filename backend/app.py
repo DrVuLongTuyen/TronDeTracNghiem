@@ -11,7 +11,6 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
 import traceback 
 from docx.shared import Cm 
-# (SỬA LỖI) Sửa tên thư viện từ WD_CELL_VERTICAL_ALIGN thành WD_ALIGN_VERTICAL
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
@@ -189,6 +188,21 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests):
     doc_buffer.seek(0)
     return doc_buffer
 
+# --- (MỚI) HÀM TẠO ĐƯỜNG KẺ NGANG (BORDER) CHO PARAGRAPH ---
+def set_paragraph_border(paragraph):
+    pPr = paragraph._p.get_or_add_pPr() # Get paragraph properties
+    pBdr = OxmlElement('w:pBdr')       # Create paragraph border element
+    
+    # Add top border
+    topBdr = OxmlElement('w:top')
+    topBdr.set(qn('w:val'), 'single') # Line style
+    topBdr.set(qn('w:sz'), '4')       # Size (4 = 0.5 pt)
+    topBdr.set(qn('w:space'), '1')
+    topBdr.set(qn('w:color'), 'auto')
+    
+    pBdr.append(topBdr)
+    pPr.append(pBdr)
+
 # --- (MỚI) HÀM TẠO FOOTER (CHÂN TRANG) ---
 def create_footer(doc, total_questions):
     section = doc.sections[0]
@@ -240,8 +254,9 @@ def create_footer(doc, total_questions):
     fldChar.set(qn('w:fldCharType'), 'end')
     run._r.append(fldChar)
     
+    # (SỬA LỖI) Sửa lại cách tạo đường kẻ
     p_line = footer.add_paragraph()
-    p_line.paragraph_format.borders[docx.enum.text.WD_BORDER_TYPE.TOP].set(docx.enum.text.WD_LINE_STYLE.SINGLE, Pt(1), 0, 'auto')
+    set_paragraph_border(p_line) # Gọi hàm mới để tạo đường kẻ
     
 # --- (MỚI) HÀM STYLE CHUNG ---
 def style_run(run, bold=False, italic=False, size=13):
@@ -407,7 +422,6 @@ def handle_mix():
                             new_prefix = answer_prefixes[j] 
                             
                             p_ans = ans_cells[j].paragraphs[0]
-                            # (SỬA LỖI) Sửa tên biến
                             ans_cells[j].vertical_alignment = WD_ALIGN_VERTICAL.TOP 
                             
                             style_paragraph(p_ans, line_spacing=1.15, space_after=0)
