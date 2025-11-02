@@ -209,6 +209,9 @@ def create_footer(doc, total_questions):
     section = doc.sections[0]
     footer = section.footer
     
+    # (SỬA) Đẩy footer xuống thấp
+    section.footer_distance = Cm(0.5)
+    
     # Xóa mọi thứ cũ trong footer
     for p in footer.paragraphs:
         p.clear()
@@ -226,6 +229,8 @@ def create_footer(doc, total_questions):
     cell_0 = footer_table.cell(0, 0)
     p_0 = cell_0.paragraphs[0]
     p_0.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    # (SỬA LỖI) Thêm space_before=0
+    style_paragraph(p_0, line_spacing=1, space_after=0, space_before=0)
     
     # (MỚI) Thêm trường NUMPAGES (Tổng số trang) vào Ghi chú
     run = p_0.add_run(f"Ghi chú: Đề thi gồm {total_questions} câu, được in trên ")
@@ -255,6 +260,8 @@ def create_footer(doc, total_questions):
     cell_1 = footer_table.cell(0, 1)
     p_1 = cell_1.paragraphs[0]
     p_1.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    # (SỬA LỖI) Thêm space_before=0
+    style_paragraph(p_1, line_spacing=1, space_after=0, space_before=0)
     
     # Thêm field code cho TRANG HIỆN TẠI
     run = p_1.add_run("Trang ")
@@ -294,12 +301,14 @@ def style_run(run, bold=False, italic=False, size=13):
     run.font.bold = bold
     run.font.italic = italic
     
-def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_after=0, page_break_before=False):
+def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_after=0, page_break_before=False, keep_with_next=False, space_before=0):
     p.paragraph_format.alignment = align
     p.paragraph_format.line_spacing = line_spacing
     p.paragraph_format.space_after = Pt(space_after)
-    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_before = Pt(space_before) # (SỬA LỖI) Thêm 0pt
     p.paragraph_format.page_break_before = page_break_before # (SỬA LỖI) Sửa lỗi ngắt trang
+    p.paragraph_format.keep_with_next = keep_with_next # (SỬA LỖI) Sửa lỗi ngắt trang
+    p.paragraph_format.widow_control = False
 
 # --- (NÂNG CẤP LỚN) ENDPOINT TRỘN ĐỀ (GIAI ĐOẠN 3) ---
 
@@ -365,7 +374,7 @@ def handle_mix():
                 section.top_margin = Cm(1)
                 section.bottom_margin = Cm(1)
                 
-                # --- (SỬA LỖI) TẠO HEADER THEO MẪU (VỚI TAB 14CM) ---
+                # --- (SỬA LỖI) TẠO HEADER THEO MẪU (VỚI TAB 15CM) ---
                 table_header = doc.add_table(rows=1, cols=2)
                 table_header.autofit = True
                 
@@ -376,12 +385,12 @@ def handle_mix():
                 style_run(run_school, bold=True, size=12) # (SỬA) Size 12
                 style_paragraph(p_school, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=0)
                 
-                # Cột 2: Thông tin kỳ thi (Tab 14cm)
+                # Cột 2: Thông tin kỳ thi (Tab 15cm)
                 cell_1 = table_header.cell(0, 1)
                 
-                # Thêm 1 Tab Căn Giữa ở mốc 14cm
+                # Thêm 1 Tab Căn Giữa ở mốc 15cm
                 tab_stops = cell_1.paragraphs[0].paragraph_format.tab_stops
-                tab_stop = tab_stops.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.CENTER) # (SỬA) 14cm
+                tab_stop = tab_stops.add_tab_stop(Cm(15), WD_TAB_ALIGNMENT.CENTER) # (SỬA) 15cm
 
                 p_exam = cell_1.paragraphs[0]
                 run_exam = p_exam.add_run("\t" + exam_name) # Thêm \t (Tab)
@@ -389,19 +398,19 @@ def handle_mix():
                 style_paragraph(p_exam, line_spacing=1, space_after=0)
                 
                 p_class = cell_1.add_paragraph()
-                p_class.paragraph_format.tab_stops.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.CENTER) # (SỬA) 14cm
+                p_class.paragraph_format.tab_stops.add_tab_stop(Cm(15), WD_TAB_ALIGNMENT.CENTER) # (SỬA) 15cm
                 run_class = p_class.add_run(f"\tLỚP: {class_name}")
                 style_run(run_class, bold=True, size=12) # (SỬA) Size 12
                 style_paragraph(p_class, line_spacing=1, space_after=0)
                 
                 p_subject = cell_1.add_paragraph()
-                p_subject.paragraph_format.tab_stops.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.CENTER) # (SỬA) 14cm
+                p_subject.paragraph_format.tab_stops.add_tab_stop(Cm(15), WD_TAB_ALIGNMENT.CENTER) # (SỬA) 15cm
                 run_subject = p_subject.add_run(f"\tTên học phần: {subject_name} (Lần {exam_iteration})")
                 style_run(run_subject, bold=False, size=12) # (SỬA) Size 12
                 style_paragraph(p_subject, line_spacing=1, space_after=0)
 
                 p_time = cell_1.add_paragraph()
-                p_time.paragraph_format.tab_stops.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.CENTER) # (SỬA) 14cm
+                p_time.paragraph_format.tab_stops.add_tab_stop(Cm(15), WD_TAB_ALIGNMENT.CENTER) # (SỬA) 15cm
                 run_time = p_time.add_run(f"\tThời gian: {exam_time} phút (không kể thời gian phát đề)")
                 style_run(run_time, bold=False, size=12) # (SỬA) Size 12
                 style_paragraph(p_time, line_spacing=1, space_after=0)
@@ -424,7 +433,7 @@ def handle_mix():
                 run_title = p_title.add_run("NỘI DUNG ĐỀ THI")
                 style_run(run_title, bold=True, size=13)
                 # (SỬA LỖI) Tắt ngắt trang
-                style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10), page_break_before=False)
+                style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10), page_break_before=False, keep_with_next=True)
                 
                 question_counter = 1
                 sorted_group_tags = sorted(groups.keys())
@@ -441,7 +450,7 @@ def handle_mix():
                         
                         p_q = doc.add_paragraph()
                         # (SỬA LỖI) Căn đều + Tắt ngắt trang
-                        style_paragraph(p_q, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0, page_break_before=False)
+                        style_paragraph(p_q, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0, page_break_before=False, keep_with_next=True)
                         
                         run_prefix = p_q.add_run(f"Câu {question_counter}: ")
                         style_run(run_prefix, bold=True) 
@@ -472,7 +481,7 @@ def handle_mix():
                             ans_cells[j].vertical_alignment = WD_ALIGN_VERTICAL.TOP 
                             
                             # (SỬA LỖI) Căn đều
-                            style_paragraph(p_ans, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0)
+                            style_paragraph(p_ans, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0, page_break_before=False)
                             p_ans.paragraph_format.left_indent = Cm(0.5)
                             
                             run_p_prefix = p_ans.add_run(f"{new_prefix}. ")
