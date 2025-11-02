@@ -263,3 +263,12 @@ select {
     width: auto;
     margin-right: 5px;
 }
+
+/* --- CSS CHO CHECKBOX LỚN --- */
+.large-checkbox {
+    transform: scale(2); /* Phóng to 2x */
+    margin-left: 10px;
+    vertical-align: middle; /* Căn giữa với dòng chữ */
+    width: auto !important; /* Ghi đè style input[type="file"] */
+    cursor: pointer;
+}
