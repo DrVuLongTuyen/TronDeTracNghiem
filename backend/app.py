@@ -11,6 +11,10 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
 import traceback 
 from docx.shared import Cm 
+# (MỚI) Import các thư viện xử lý bảng và footer
+from docx.enum.table import WD_ALIGN_TABLE, WD_CELL_VERTICAL_ALIGN
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
@@ -98,115 +102,169 @@ def home():
 
 @app.route('/upload', methods=['POST'])
 def handle_upload():
+    # (Hàm này giữ nguyên, không thay đổi)
     auth_header = request.headers.get('Authorization')
     if not auth_header: return jsonify({"error": "Thiếu token xác thực"}), 401
-    
     try:
         jwt_token = auth_header.split(' ')[1]
         user_id = supabase.auth.get_user(jwt_token).user.id
     except Exception as e:
         return jsonify({"error": f"Token không hợp lệ: {e}"}), 401
-
     if 'file' not in request.files: return jsonify({"error": "Không có tệp"}), 400
     file = request.files['file']
     if not file.filename.endswith('.docx'): return jsonify({"error": "Chỉ chấp nhận .docx"}), 400
-
     parsed_data, error = parse_test_document(file.stream)
     if error: return jsonify({"error": error}), 500
-        
     rows_to_insert = []
     for group in parsed_data:
         for question in group["questions"]:
             if not question["answers"]: continue
             rows_to_insert.append({
-                "user_id": user_id,
-                "group_tag": group["group_tag"],
-                "group_is_fixed": group["is_fixed"],
-                "question_text": question["question_text"],
-                "answers": json.dumps(question["answers"], ensure_ascii=False),
+                "user_id": user_id, "group_tag": group["group_tag"], "group_is_fixed": group["is_fixed"],
+                "question_text": question["question_text"], "answers": json.dumps(question["answers"], ensure_ascii=False),
                 "correct_answer": question.get("correct_answer")
             })
-    
     if not rows_to_insert: return jsonify({"error": "Không tìm thấy câu hỏi hợp lệ"}), 400
-    
     try:
         supabase.table('question_banks').insert(rows_to_insert).execute()
     except Exception as e:
         return jsonify({"error": f"Lỗi khi lưu vào DB: {e}"}), 500
-
     return jsonify({"message": f"Xử lý thành công tệp '{file.filename}'", "questions_saved": len(rows_to_insert)}), 200
-
 
 # --- ENDPOINT XÓA KHO CÂU HỎI (ĐÃ SỬA LỖI) ---
 
 @app.route('/clear', methods=['DELETE'])
 def handle_clear():
-    # 1. Xác thực người dùng
+    # (Hàm này giữ nguyên, không thay đổi)
     auth_header = request.headers.get('Authorization')
     if not auth_header: return jsonify({"error": "Thiếu token xác thực"}), 401
-    
     try:
         jwt_token = auth_header.split(' ')[1]
         user_id = supabase.auth.get_user(jwt_token).user.id
     except Exception as e:
         return jsonify({"error": f"Token không hợp lệ: {e}"}), 401
-
-    # 2. Xóa dữ liệu
     try:
         response = supabase.table('question_banks').delete().eq('user_id', user_id).execute()
         num_deleted = len(response.data) 
-        
         return jsonify({"message": f"Đã xóa thành công {num_deleted} câu hỏi cũ."}), 200
-        
     except Exception as e:
         return jsonify({"error": f"Lỗi khi xóa dữ liệu: {e}"}), 500
 
     
-# --- (NÂNG CẤP) ENDPOINT TRỘN ĐỀ (VỚI TRY...EXCEPT) ---
+# --- (NÂNG CẤP) HÀM TẠO ĐÁP ÁN ---
 
 def create_answer_key_doc(answer_key_map, base_name, num_tests):
+    # (Hàm này giữ nguyên, không thay đổi)
     doc = Document()
     doc.add_heading("NỘI DUNG ĐÁP ÁN", 0).alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph() 
-
     num_questions = 0
     if num_tests > 0 and len(answer_key_map) > 0:
         first_test_code = list(answer_key_map.keys())[0]
         num_questions = len(answer_key_map[first_test_code])
-    
     rows_per_col = (num_questions + 1) // 2 
     num_cols = (num_tests + 1) * 2
     table = doc.add_table(rows=rows_per_col + 1, cols=num_cols) 
     table.style = 'Table Grid'
     table.autofit = True
-
     header_cells = table.rows[0].cells
     for i in range(2): 
         col_offset = i * (num_tests + 1)
         header_cells[col_offset].text = 'Đề\\câu'
         for j in range(num_tests):
             header_cells[col_offset + j + 1].text = f"{base_name}{j+1:02d}"
-
     for row in range(rows_per_col):
         for col_group in range(2): 
             col_offset = col_group * (num_tests + 1)
-            
             question_num = row + (col_group * rows_per_col) + 1
-            if question_num > num_questions:
-                break 
-
+            if question_num > num_questions: break 
             table.cell(row + 1, col_offset).text = str(question_num)
-            
             for test_idx in range(num_tests):
                 test_code = f"{base_name}{test_idx+1:02d}"
                 if test_code in answer_key_map and len(answer_key_map[test_code]) > (question_num - 1):
                     answer = answer_key_map[test_code][question_num - 1]
                     table.cell(row + 1, col_offset + test_idx + 1).text = answer
-
     doc_buffer = io.BytesIO()
     doc.save(doc_buffer)
     doc_buffer.seek(0)
     return doc_buffer
+
+# --- (MỚI) HÀM TẠO FOOTER (CHÂN TRANG) ---
+def create_footer(doc, total_questions):
+    section = doc.sections[0]
+    footer = section.footer
+    
+    # Xóa mọi thứ cũ trong footer
+    for p in footer.paragraphs:
+        p.clear()
+        
+    # Thêm 1 bảng 2 cột
+    footer_table = footer.add_table(rows=1, cols=2, width=doc.sections[0].page_width - doc.sections[0].left_margin - doc.sections[0].right_margin)
+    
+    # Cột 1: Ghi chú
+    cell_0 = footer_table.cell(0, 0)
+    p_0 = cell_0.paragraphs[0]
+    p_0.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    run = p_0.add_run(f"Ghi chú: Đề thi gồm {total_questions} câu")
+    run.font.name = 'Times New Roman'
+    run.font.size = Pt(11)
+    run.font.italic = True
+
+    # Cột 2: Số trang
+    cell_1 = footer_table.cell(0, 1)
+    p_1 = cell_1.paragraphs[0]
+    p_1.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    
+    # Thêm trường PAGE (Trang hiện tại)
+    run = p_1.add_run("Trang ")
+    run.font.name = 'Times New Roman'
+    run.font.size = Pt(11)
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'begin')
+    run._r.append(fldChar)
+    instrText = OxmlElement('w:instrText')
+    instrText.set(qn('xml:space'), 'preserve')
+    instrText.text = 'PAGE'
+    run._r.append(instrText)
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'end')
+    run._r.append(fldChar)
+
+    # Thêm dấu "/"
+    run = p_1.add_run("/")
+    run.font.name = 'Times New Roman'
+    run.font.size = Pt(11)
+
+    # Thêm trường NUMPAGES (Tổng số trang)
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'begin')
+    run._r.append(fldChar)
+    instrText = OxmlElement('w:instrText')
+    instrText.set(qn('xml:space'), 'preserve')
+    instrText.text = 'NUMPAGES'
+    run._r.append(instrText)
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'end')
+    run._r.append(fldChar)
+    
+    # Thêm đường kẻ ngang
+    p_line = footer.add_paragraph()
+    p_line.paragraph_format.borders[docx.enum.text.WD_BORDER_TYPE.TOP].set(docx.enum.text.WD_LINE_STYLE.SINGLE, Pt(1), 0, 'auto')
+    
+# --- (MỚI) HÀM STYLE CHUNG ---
+def style_run(run, bold=False, italic=False, size=13):
+    run.font.name = 'Times New Roman'
+    run.font.size = Pt(size)
+    run.font.bold = bold
+    run.font.italic = italic
+    
+def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_after=0):
+    p.paragraph_format.alignment = align
+    p.paragraph_format.line_spacing = line_spacing
+    p.paragraph_format.space_after = Pt(space_after)
+    p.paragraph_format.space_before = Pt(0)
+
+# --- (NÂNG CẤP LỚN) ENDPOINT TRỘN ĐỀ (GIAI ĐOẠN 3) ---
 
 @app.route('/mix', methods=['POST'])
 def handle_mix():
@@ -225,6 +283,15 @@ def handle_mix():
         data = request.json
         num_tests = int(data.get('num_tests', 2))
         base_name = data.get('base_name', 'VLT').upper()
+        # (MỚI) Lấy 7 thông tin header
+        header_data = data.get('header_data', {})
+        school_name = header_data.get('school_name', '').upper()
+        exam_name = header_data.get('exam_name', '').upper()
+        class_name = header_data.get('class_name', '').upper()
+        subject_name = header_data.get('subject_name', '')
+        exam_iteration = header_data.get('exam_iteration', '1')
+        exam_time = header_data.get('exam_time', '90')
+        allow_documents = header_data.get('allow_documents', False)
         
         # 3. Lấy toàn bộ câu hỏi của user từ DB
         try:
@@ -248,19 +315,66 @@ def handle_mix():
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             
-            # --- (MỚI) HÀM STYLING CHUNG ---
-            def style_run(run, bold=False):
-                run.font.name = 'Times New Roman' 
-                run.font.size = Pt(13)           
-                run.font.bold = bold             
-            
             # 5. Lặp để tạo số lượng đề
             for i in range(1, num_tests + 1):
                 test_code = f"{base_name}{i:02d}" 
                 answer_key_map[test_code] = [] 
                 
                 doc = Document() 
-                doc.add_heading(f"ĐỀ KIỂM TRA - MÃ ĐỀ: {test_code}", 0)
+                
+                # --- (MỚI) TẠO HEADER THEO MẪU ---
+                table_header = doc.add_table(rows=1, cols=2)
+                table_header.autofit = True
+                
+                # Cột 1: Tên trường (Căn giữa)
+                cell_0 = table_header.cell(0, 0)
+                p_school = cell_0.paragraphs[0]
+                run_school = p_school.add_run(school_name)
+                style_run(run_school, bold=True, size=13)
+                style_paragraph(p_school, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=0)
+                
+                # Cột 2: Thông tin kỳ thi (Căn phải)
+                cell_1 = table_header.cell(0, 1)
+                
+                p_exam = cell_1.paragraphs[0]
+                run_exam = p_exam.add_run(exam_name)
+                style_run(run_exam, bold=True, size=13)
+                style_paragraph(p_exam, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
+                
+                p_class = cell_1.add_paragraph()
+                run_class = p_class.add_run(f"LỚP: {class_name}")
+                style_run(run_class, bold=True, size=13)
+                style_paragraph(p_class, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
+                
+                p_subject = cell_1.add_paragraph()
+                run_subject = p_subject.add_run(f"Tên học phần: {subject_name} (Lần {exam_iteration})")
+                style_run(run_subject, bold=False, size=13) # Không in đậm
+                style_paragraph(p_subject, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
+
+                p_time = cell_1.add_paragraph()
+                run_time = p_time.add_run(f"Thời gian: {exam_time} phút (không kể thời gian phát đề)")
+                style_run(run_time, bold=False, size=13) # Không in đậm
+                style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1, space_after=0)
+
+                doc.add_paragraph() # Thêm một khoảng trống
+
+                # --- (MỚI) TẠO THÔNG TIN ĐỀ SỐ ---
+                doc_text = "(HSSV không được sử dụng tài liệu)" if not allow_documents else "(HSSV được sử dụng tài liệu)"
+                p_de = doc.add_paragraph()
+                run_de = p_de.add_run(f"ĐỀ SỐ: {test_code} ")
+                style_run(run_de, bold=True, size=13)
+                run_doc = p_de.add_run(doc_text)
+                style_run(run_doc, bold=False, size=13)
+                style_paragraph(p_de, line_spacing=1.15, space_after=0)
+
+                doc.add_paragraph() # Thêm một khoảng trống
+
+                # --- (MỚI) TẠO TIÊU ĐỀ "NỘI DUNG" ---
+                p_title = doc.add_paragraph()
+                run_title = p_title.add_run("NỘI DUNG ĐỀ THI")
+                style_run(run_title, bold=True, size=13)
+                style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10))
+
                 
                 question_counter = 1
                 sorted_group_tags = sorted(groups.keys())
@@ -277,11 +391,9 @@ def handle_mix():
                         
                         # --- (SỬA) ĐỊNH DẠNG CÂU HỎI ---
                         p_q = doc.add_paragraph()
-                        p_q.paragraph_format.line_spacing = 1.15    
-                        p_q.paragraph_format.left_indent = Pt(0)    
-                        p_q.paragraph_format.space_after = Pt(0) # <<< DÒNG MỚI (SỬA LỖI DÃN ĐOẠN)
+                        style_paragraph(p_q, line_spacing=1.15, space_after=0)
                         
-                        run_prefix = p_q.add_run(f"Câu {question_counter}. ")
+                        run_prefix = p_q.add_run(f"Câu {question_counter}: ")
                         style_run(run_prefix, bold=True) 
                         
                         run_text = p_q.add_run(clean_question_text)
@@ -297,14 +409,21 @@ def handle_mix():
                         answer_prefixes = ['A', 'B', 'C', 'D']
                         found_correct_answer = False 
                         
-                        # --- (SỬA) ĐỊNH DẠNG 4 ĐÁP ÁN ---
+                        # --- (SỬA) TẠO BẢNG 2 CỘT CHO ĐÁP ÁN ---
+                        table_ans = doc.add_table(rows=2, cols=2)
+                        table_ans.autofit = True
+                        table_ans.alignment = WD_ALIGN_TABLE.CENTER
+                        
+                        ans_cells = [table_ans.cell(0,0), table_ans.cell(0,1), table_ans.cell(1,0), table_ans.cell(1,1)]
+                        
                         for j, ans in enumerate(answers[:4]):
                             new_prefix = answer_prefixes[j] 
                             
-                            p_ans = doc.add_paragraph()
-                            p_ans.paragraph_format.line_spacing = 1.15  
-                            p_ans.paragraph_format.left_indent = Cm(0.5) 
-                            p_ans.paragraph_format.space_after = Pt(0) # <<< DÒNG MỚI (SỬA LỖI DÃN ĐOẠN)
+                            p_ans = ans_cells[j].paragraphs[0]
+                            ans_cells[j].vertical_alignment = WD_CELL_VERTICAL_ALIGN.TOP
+                            
+                            style_paragraph(p_ans, line_spacing=1.15, space_after=0)
+                            p_ans.paragraph_format.left_indent = Cm(0.5)
                             
                             run_p_prefix = p_ans.add_run(f"{new_prefix}. ")
                             style_run(run_p_prefix, bold=True) 
@@ -318,6 +437,26 @@ def handle_mix():
 
                         if not found_correct_answer:
                             answer_key_map[test_code].append('?') 
+
+                # --- (MỚI) TẠO KHỐI KÝ TÊN ---
+                doc.add_paragraph() # Khoảng trống
+                p_date = doc.add_paragraph()
+                run_date = p_date.add_run("Cần Thơ, ngày... tháng... năm...")
+                style_run(run_date, italic=True)
+                style_paragraph(p_date, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1.15, space_after=0)
+
+                p_signer = doc.add_paragraph()
+                run_signer = p_signer.add_run("Giảng viên tổng hợp đề")
+                style_run(run_signer, bold=True)
+                style_paragraph(p_signer, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1.15, space_after=0)
+
+                p_name = doc.add_paragraph()
+                run_name = p_name.add_run("(Ký, ghi rõ họ tên)")
+                style_run(run_name, italic=True)
+                style_paragraph(p_name, align=WD_ALIGN_PARAGRAPH.RIGHT, line_spacing=1.15, space_after=0)
+                
+                # --- (MỚI) TẠO FOOTER ---
+                create_footer(doc, question_counter - 1)
 
                 doc_buffer = io.BytesIO()
                 doc.save(doc_buffer)
