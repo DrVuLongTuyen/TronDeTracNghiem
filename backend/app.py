@@ -11,6 +11,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from datetime import datetime 
 import traceback 
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
+# (MỚI) Thêm thư viện TAB
 from docx.enum.text import WD_TAB_ALIGNMENT, WD_TAB_LEADER
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
@@ -207,27 +208,35 @@ def create_footer(doc, total_questions):
     section = doc.sections[0]
     footer = section.footer
     
+    # (SỬA) Đẩy footer xuống thấp
     section.footer_distance = Cm(0.5)
     
+    # Xóa mọi thứ cũ trong footer
     for p in footer.paragraphs:
         p.clear()
         
+    # (SỬA) 1. Thêm đường kẻ ngang LÊN TRÊN
     p_line = footer.add_paragraph()
     set_paragraph_border(p_line)
-    style_paragraph(p_line, space_after=0)
+    # (SỬA LỖI) Thêm dãn đoạn 0pt cho đường kẻ
+    style_paragraph(p_line, space_after=Pt(2), space_before=0) # Thêm 2pt space after
     
+    # 2. Thêm bảng 2 cột BÊN DƯỚI đường kẻ
     footer_table = footer.add_table(rows=1, cols=2, width=doc.sections[0].page_width - doc.sections[0].left_margin - doc.sections[0].right_margin)
     
+    # Cột 1: Ghi chú
     cell_0 = footer_table.cell(0, 0)
     p_0 = cell_0.paragraphs[0]
     p_0.alignment = WD_ALIGN_PARAGRAPH.LEFT
     style_paragraph(p_0, line_spacing=1, space_after=0, space_before=0)
     
+    # (MỚI) Thêm trường NUMPAGES (Tổng số trang) vào Ghi chú
     run = p_0.add_run(f"Ghi chú: Đề thi gồm {total_questions} câu, được in trên ")
     run.font.name = 'Times New Roman'
     run.font.size = Pt(11)
     run.font.italic = True
     
+    # Thêm field code cho TỔNG SỐ TRANG
     fldChar = OxmlElement('w:fldChar')
     fldChar.set(qn('w:fldCharType'), 'begin')
     run._r.append(fldChar)
@@ -245,11 +254,13 @@ def create_footer(doc, total_questions):
     run.font.italic = True
 
 
+    # Cột 2: Số trang
     cell_1 = footer_table.cell(0, 1)
     p_1 = cell_1.paragraphs[0]
     p_1.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     style_paragraph(p_1, line_spacing=1, space_after=0, space_before=0)
     
+    # Thêm field code cho TRANG HIỆN TẠI
     run = p_1.add_run("Trang ")
     run.font.name = 'Times New Roman'
     run.font.size = Pt(11)
@@ -268,6 +279,7 @@ def create_footer(doc, total_questions):
     run.font.name = 'Times New Roman'
     run.font.size = Pt(11)
 
+    # Thêm field code cho TỔNG SỐ TRANG
     fldChar = OxmlElement('w:fldChar')
     fldChar.set(qn('w:fldCharType'), 'begin')
     run._r.append(fldChar)
