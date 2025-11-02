@@ -209,6 +209,8 @@ def create_footer(doc, total_questions):
     
     # (SỬA) Đẩy footer xuống thấp
     section.footer_distance = Cm(0.5)
+    # (SỬA LỖI) Bật footer cho mọi trang
+    section.different_first_page_header_footer = False 
     
     # Xóa mọi thứ cũ trong footer
     for p in footer.paragraphs:
