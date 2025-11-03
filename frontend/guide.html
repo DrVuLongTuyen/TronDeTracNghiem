@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hướng dẫn sử dụng - Trộn Đề TN</title>
     <link rel="stylesheet" href="style.css">
-<link rel="icon" href="logo.png" type="image/png">
+    <link rel="icon" href="logo.png" type="image/png">
     <meta property="og:title" content="Trộn Đề Trắc Nghiệm Thông Minh">
     <meta property="og:description" content="Nền tảng tạo đề hoán vị và đáp án tự động. Nhanh chóng, an toàn và miễn phí.">
-    <meta property="og:image" content="https://trondetn.vltuyen.com/logo.png">
-    <meta property="og:url" content="https://trondetn.vltuyen.com">
+    <meta property="og:image" content="[https://trondetn.vltuyen.com/logo.png](https://trondetn.vltuyen.com/logo.png)">
+    <meta property="og:url" content="[https://trondetn.vltuyen.com](https://trondetn.vltuyen.com)">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
-    ```
 </head>
 <body>
     <div class="container">
@@ -36,9 +35,10 @@
         
         <h3>1. Đăng ký tài khoản</h3>
         <ol>
-            <li>Truy cập <a href="https://trondetn.vltuyen.com" target="_blank">https://trondetn.vltuyen.com</a>.</li>
-            <li>Nhập email của bạn và một mật khẩu.
-                <br><strong>Lưu ý quan trọng:</strong> Mật khẩu phải có <strong>độ dài tối thiểu 6 ký tự</strong>.
+            <li>Truy cập <a href="[https://trondetn.vltuyen.com](https://trondetn.vltuyen.com)" target="_blank">[https://trondetn.vltuyen.com](https://trondetn.vltuyen.com)</a>.</li>
+            <li>Nhấn vào link "Đăng ký ngay".</li>
+            <li>Điền đầy đủ thông tin (Họ, Tên, Ngày sinh, Giới tính, Email, Mật khẩu).
+                <br><strong>Lưu ý quan trọng:</strong> Mật khẩu phải có <strong>độ dài tối thiểu 6 ký tự</strong> và gõ 2 lần phải khớp nhau.
             </li>
             <li>Nhấn nút <strong>"Đăng ký"</strong>.</li>
         </ol>
@@ -58,7 +58,8 @@
         <ol>
             <li><strong>(Nếu cần) Xóa kho cũ:</strong> Nếu bạn muốn làm một bộ đề mới, hãy nhấn nút <strong>"Xóa toàn bộ kho câu hỏi cũ"</strong>.</li>
             <li><strong>Tải lên đề gốc:</strong> Nhấn <strong>"Chọn tệp"</strong> và chọn tệp <code>.docx</code> đã định dạng (xem bên dưới). Nhấn <strong>"Tải lên và xử lý"</strong>. Đợi đến khi có thông báo "Xử lý thành công...".</li>
-            <li><strong>Trộn đề:</strong> Kéo xuống mục "Tạo Đề hoán vị", nhập số lượng đề bạn muốn và tên tệp (ví dụ: VLT).</li>
+            <li><strong>Điền thông tin Tiêu đề:</strong> Nhập Tên trường, Tên kỳ thi, Lớp, v.v. vào các ô trong biểu mẫu "Thông tin Tiêu đề". (Nếu bỏ trống, hệ thống sẽ dùng giá trị gợi ý).</li>
+            <li><strong>Trộn đề:</strong> Kéo xuống mục "TẠO ĐỀ HOÁN VỊ", nhập số lượng đề bạn muốn và Tên tệp tin (ví dụ: VLT).</li>
             <li><strong>Tải về:</strong> Nhấn <strong>"Bắt đầu trộn đề"</strong>. Chờ vài giây, nút <strong>"Tải về (.zip)"</strong> sẽ hiện ra. Nhấn vào đó để tải tệp nén chứa các mã đề và đáp án.</li>
         </ol>
 
@@ -114,10 +115,11 @@ C. Lysosome.
         <h2>Xử lý sự cố (Troubleshooting)</h2>
         <ul>
             <li><strong>Lỗi: "Lỗi đăng ký..."</strong>: Mật khẩu của bạn có thể dưới 6 ký tự. Vui lòng thử lại với mật khẩu dài hơn.</li>
+            <li><strong>Lỗi: "Lỗi đăng nhập: Invalid API key"</strong>: Lỗi này 99% là do bạn chưa sửa 2 dòng `SUPABASE_URL` và `SUPABASE_ANON_KEY` trong tệp `app.js` trên GitHub.</li>
             <li><strong>Đăng nhập không được</strong>: Bạn đã nhấn vào link xác thực trong email chưa? Vui lòng kiểm tra email (cả mục Spam).</li>
             <li><strong>Upload báo lỗi: "Không tìm thấy câu hỏi..."</strong>: Tệp <code>.docx</code> của bạn đã định dạng sai. Vui lòng kiểm tra lại 6 quy tắc ở trên.</li>
             <li><strong>Upload báo lỗi: "Lỗi kết nối API: Failed to fetch"</strong>: Có thể máy chủ Backend đang tạm nghỉ. Vui lòng đợi 30 giây và nhấn nút "Tải lên" lại.</li>
-            <li><strong>Trộn đề báo lỗi: "Failed to fetch"</strong>: Tương tự như trên, máy chủ đang "ngủ". Vui lòng đợi 30 giây và nhấn "Bắt đầu trộn đề" lại.</li>
+            <li><strong>Trộn đề báo lỗi: "Lỗi máy chủ nội bộ..."</strong>: Tệp <code>.docx</code> của bạn có thể bị lỗi định dạng (ví dụ: thiếu gạch chân đáp án). Vui lòng kiểm tra lại tệp gốc hoặc nhấn "Xóa toàn bộ kho câu hỏi cũ" và tải lại.</li>
         </ul>
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
