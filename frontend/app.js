@@ -1,157 +1,34 @@
-// ==================================================================
-// == QUAN TRỌNG: HÃY ĐẢM BẢO 3 DÒNG NÀY LÀ CỦA BẠN ==
-// ==================================================================
-const SUPABASE_URL = 'https://iezcijerbmsgsxilsixo.supabase.co'; // (SỬA LỖI) Đã xóa [...]()
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllemNpamVyYm1zZ3N4aWxzaXhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NDg5MjAsImV4cCI6MjA3NzEyNDkyMH0.g_VIc4KIpJhKutJ3rBCbKB02gKcjhmaGMsvbG9rjcUk'; // Giữ nguyên Key ANNON của bạn
-const API_BASE_URL = 'https://trondetn-api.onrender.com'; // (SỬA LỖI) Đã xóa [...]()
-// ==================================================================
+// Tệp này chứa các hàm gọi API Backend (trên Render)
+import { API_BASE_URL } from './constants.js';
+import { showMessage } from './ui.js';
 
-// (SỬA LỖI) Thêm lại dòng import này
-const { createClient } = window.supabase;
-
-let supabase;
-try {
-    if (SUPABASE_URL.includes('YOUR_SUPABASE_URL')) {
-        console.warn("app.js: Supabase URL chưa được cấu hình.");
-    }
-    // (SỬA LỖI) Sửa lại hàm khởi tạo
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch (error) {
-    console.error("Lỗi khởi tạo Supabase:", error.message);
-}
-
-// --- Hàm chung ---
-function showMessage(element, message, isError = false) {
-    if (element) {
-        element.textContent = message;
-        element.className = isError ? 'error' : 'success';
-    }
-}
-
-// --- Xử lý Session ---
-async function checkUserSession() {
-    if (!supabase) return;
-
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('register.html') || window.location.pathname === '/';
-    
-    if (session) { // Đã đăng nhập
-        if (isAuthPage) {
-            window.location.href = 'dashboard.html';
-        } else {
-            const userEmailEl = document.getElementById('user-email');
-            if (userEmailEl) userEmailEl.textContent = session.user.email;
-        }
-    } else { // Chưa đăng nhập
-        if (!isAuthPage && window.location.pathname.endsWith('dashboard.html')) {
-             window.location.href = 'index.html';
-        }
-    }
-}
-
-// --- (SỬA LẠI HOÀN TOÀN) Xử lý Đăng ký ---
-async function handleSignUp(msgEl) {
-    // 1. Lấy tất cả dữ liệu từ form
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirm-password').value;
-    const firstName = document.getElementById('first-name').value;
-    const lastName = document.getElementById('last-name').value;
-    const dobDay = document.getElementById('dob-day').value;
-    const dobMonth = document.getElementById('dob-month').value;
-    const dobYear = document.getElementById('dob-year').value;
-    const gender = document.querySelector('input[name="gender"]:checked').value;
-
-    // 2. Kiểm tra (Validation)
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-        showMessage(msgEl, 'Lỗi: Vui lòng điền đầy đủ các trường bắt buộc.', true);
-        return;
-    }
-    if (password !== confirmPassword) {
-        showMessage(msgEl, 'Lỗi: Mật khẩu và xác nhận mật khẩu không khớp.', true);
-        return;
-    }
-    if (password.length < 6) {
-        showMessage(msgEl, 'Lỗi: Mật khẩu phải có ít nhất 6 ký tự.', true);
-        return;
-    }
-
-    // 3. Tạo ngày sinh (DOB)
-    const dob = `${dobYear}-${dobMonth}-${dobDay}`;
-
-    // 4. Bắt đầu quá trình đăng ký
-    showMessage(msgEl, 'Đang xử lý...', false);
-
-    try {
-        // (SỬA) Gửi TẤT CẢ thông tin lên AUTH
-        const { data, error } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                data: {
-                    first_name: firstName,
-                    last_name: lastName,
-                    gender: gender,
-                    dob: dob
-                }
-            }
-        });
-
-        if (error) {
-            throw error; // Ném lỗi (sẽ được bắt ở dưới)
-        }
-        
-        // 5. Thành công
-        showMessage(msgEl, 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực.', false);
-
-    } catch (error) {
-        // 6. Xử lý tất cả các lỗi
-        if (error.message === 'User already registered') {
-            showMessage(msgEl, 'Lỗi đăng ký: Tài khoản này đã đăng ký, vui lòng chuyển sang đăng nhập.', true);
-        } else {
-            showMessage(msgEl, `Lỗi: ${error.message}`, true);
-        }
-    }
-}
-
-
-// --- Xử lý Đăng nhập ---
-async function handleLogin(email, password, msgEl) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-        if (error.message === 'Email not confirmed') {
-            showMessage(msgEl, 'Lỗi đăng nhập: Email chưa xác thực. Vui lòng kiểm tra email của bạn.', true);
-        } else if (error.message === 'Invalid login credentials') {
-            showMessage(msgEl, 'Lỗi đăng nhập: Sai email hoặc mật khẩu.', true);
-        } else {
-            showMessage(msgEl, `Lỗi đăng nhập: ${error.message}`, true);
-        }
-    } else {
-        window.location.href = 'dashboard.html';
-    }
-}
-
-// --- Xử lý Đăng xuất ---
-async function handleLogout() {
-    const { error } = await supabase.auth.signOut();
-    if (error) alert(`Lỗi đăng xuất: ${error.message}`);
-    else window.location.href = 'index.html';
-}
-
-// --- Xử lý Upload (Giai đoạn 1) ---
-async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
-    if (API_BASE_URL.includes('YOUR_RENDER_API_URL')) {
-         showMessage(msgEl, 'Lỗi: API Backend chưa được cấu hình trong app.js', true);
-         return;
-    }
-    
+/**
+ * Lấy session token an toàn
+ * @param {object} supabase - Đối tượng Supabase client
+ * @returns {string|null} Access token
+ */
+async function getSessionToken(supabase) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-        showMessage(msgEl, 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', true);
+        // (Đây là hàm showMessage toàn cục, không phải từ ui.js)
+        alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
         window.location.href = 'index.html';
-        return;
+        return null;
     }
+    return session.access_token;
+}
+
+/**
+ * Xử lý Tải tệp .docx lên
+ * @param {object} supabase - Đối tượng Supabase client
+ * @param {File} file - Tệp .docx
+ * @param {HTMLElement} msgEl - Element hiển thị thông báo
+ * @param {HTMLElement} btnEl - Nút bấm
+ * @param {HTMLElement} spinnerEl - Spinner loading
+ */
+export async function handleFileUpload(supabase, file, msgEl, btnEl, spinnerEl) {
+    const token = await getSessionToken(supabase);
+    if (!token) return;
 
     const formData = new FormData();
     formData.append('file', file);
@@ -163,7 +40,7 @@ async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
     try {
         const response = await fetch(`${API_BASE_URL}/upload`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${session.access_token}` },
+            headers: { 'Authorization': `Bearer ${token}` },
             body: formData
         });
         
@@ -184,13 +61,15 @@ async function handleFileUpload(file, msgEl, btnEl, spinnerEl) {
     }
 }
 
-// --- Xử lý Xóa Kho ---
-async function handleClearDatabase(msgEl, btnEl) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-        showMessage(msgEl, 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', true);
-        return;
-    }
+/**
+ * Xử lý Xóa kho câu hỏi
+ * @param {object} supabase - Đối tượng Supabase client
+ * @param {HTMLElement} msgEl - Element hiển thị thông báo
+ * @param {HTMLElement} btnEl - Nút bấm
+ */
+export async function handleClearDatabase(supabase, msgEl, btnEl) {
+    const token = await getSessionToken(supabase);
+    if (!token) return;
 
     showMessage(msgEl, 'Đang xóa dữ liệu cũ...', false);
     btnEl.disabled = true;
@@ -198,9 +77,7 @@ async function handleClearDatabase(msgEl, btnEl) {
     try {
         const response = await fetch(`${API_BASE_URL}/clear`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${session.access_token}`
-            }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         
         const result = await response.json();
@@ -218,16 +95,20 @@ async function handleClearDatabase(msgEl, btnEl) {
     }
 }
 
-// --- (SỬA) Xử lý Trộn đề (Giai đoạn 3) ---
-async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
-    
-    // 1. Lấy thông tin Giai đoạn 2
+/**
+ * Xử lý Trộn đề
+ * @param {object} supabase - Đối tượng Supabase client
+ * @param {HTMLElement} msgEl - Element hiển thị thông báo
+ * @param {HTMLElement} btnEl - Nút "Bắt đầu trộn"
+ * @param {HTMLElement} downloadBtnEl - Nút "Tải về"
+ */
+export async function handleMixRequest(supabase, msgEl, btnEl, downloadBtnEl) {
+    // 1. Lấy thông tin Giai đoạn 2 (Trộn đề)
     const numTests = document.getElementById('num-tests-input').value;
-    // (SỬA) Lấy placeholder nếu baseName trống
     const baseNameEl = document.getElementById('base-name-input');
     const baseName = baseNameEl.value.toUpperCase() || baseNameEl.placeholder;
 
-    // 2. (SỬA) Lấy 7 thông tin Giai đoạn 3 (lấy placeholder nếu trống)
+    // 2. Lấy 7 thông tin Giai đoạn 3 (Header)
     const schoolNameEl = document.getElementById('school-name');
     const examNameEl = document.getElementById('exam-name');
     const classNameEl = document.getElementById('class-name');
@@ -244,11 +125,8 @@ async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
     };
 
     // 3. Lấy token
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-        showMessage(msgEl, 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', true);
-        return;
-    }
+    const token = await getSessionToken(supabase);
+    if (!token) return;
 
     showMessage(msgEl, 'Đang trộn đề... Việc này có thể mất một phút...', false);
     btnEl.disabled = true;
@@ -258,17 +136,18 @@ async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
         const response = await fetch(`${API_BASE_URL}/mix`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${session.access_token}`,
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 num_tests: numTests,
                 base_name: baseName,
-                header_data: headerData // (MỚI) Gửi 7 thông tin mới
+                header_data: headerData
             })
         });
 
         if (response.ok) {
+            // Lấy tên tệp (có ngày giờ) từ server
             const contentDisposition = response.headers.get('content-disposition') || response.headers.get('Content-Disposition');
             let downloadName = `Bo_de_tron_${baseName}.zip`; 
             if (contentDisposition) {
@@ -283,7 +162,6 @@ async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
 
             downloadBtnEl.href = downloadUrl;
             downloadBtnEl.download = downloadName; 
-            
             downloadBtnEl.style.display = 'inline-block';
             showMessage(msgEl, `Đã trộn xong ${numTests} đề! Nhấn nút 'Tải về' để lưu.`, false);
 
@@ -298,93 +176,3 @@ async function handleMixRequest(msgEl, btnEl, downloadBtnEl) {
         btnEl.disabled = false; 
     }
 }
-
-// --- (MỚI) Hàm điền ngày tháng năm sinh ---
-function populateDateOfBirth() {
-    const daySelect = document.getElementById('dob-day');
-    const monthSelect = document.getElementById('dob-month');
-    const yearSelect = document.getElementById('dob-year');
-
-    if (!daySelect || !monthSelect || !yearSelect) return; 
-
-    daySelect.options.add(new Option('Ngày', '01'));
-    for (let i = 1; i <= 31; i++) {
-        daySelect.options.add(new Option(i, (i < 10 ? '0' + i : i))); 
-    }
-    monthSelect.options.add(new Option('Tháng', '01'));
-    for (let i = 1; i <= 12; i++) {
-        monthSelect.options.add(new Option(i, (i < 10 ? '0' + i : i))); 
-    }
-    const currentYear = new Date().getFullYear();
-    yearSelect.options.add(new Option('Năm', '2000'));
-    for (let i = currentYear - 18; i >= currentYear - 100; i--) { 
-        yearSelect.options.add(new Option(i, i));
-    }
-}
-
-
-// --- Gán sự kiện khi DOM tải xong ---
-document.addEventListener('DOMContentLoaded', () => {
-    checkUserSession(); // Kiểm tra session
-    populateDateOfBirth(); // (MỚI) Điền ngày tháng năm sinh
-
-    // --- Gán sự kiện cho 2 trang riêng biệt ---
-    const loginBtn = document.getElementById('login-btn');
-    const signupBtn = document.getElementById('signup-btn');
-    const authMessage = document.getElementById('auth-message');
-    
-    if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            handleLogin(email, password, authMessage);
-        });
-    }
-    
-    if (signupBtn) {
-        signupBtn.addEventListener('click', () => {
-            handleSignUp(authMessage); 
-        });
-    }
-
-    // --- Trang Dashboard (dashboard.html) ---
-    const logoutBtn = document.getElementById('logout-btn');
-    const uploadBtn = document.getElementById('upload-btn');
-    const fileInput = document.getElementById('file-input');
-    const uploadMessage = document.getElementById('upload-message');
-    const uploadSpinner = document.getElementById('upload-spinner');
-    const clearDbBtn = document.getElementById('clear-db-btn');
-    const mixBtn = document.getElementById('mix-btn');
-    const downloadBtn = document.getElementById('download-btn');
-    const mixMessage = document.getElementById('mix-message');
-
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', handleLogout);
-    }
-    
-    if (uploadBtn) {
-        uploadBtn.addEventListener('click', () => {
-            const file = fileInput.files[0];
-            if (!file) {
-                showMessage(uploadMessage, 'Vui lòng chọn một tệp .docx', true);
-                return;
-            }
-            handleFileUpload(file, uploadMessage, uploadBtn, uploadSpinner);
-        });
-    }
-
-    if (clearDbBtn) {
-        clearDbBtn.addEventListener('click', () => {
-            if (!confirm('Bạn có chắc chắn muốn XÓA TOÀN BỘ kho câu hỏi hiện tại không? Hành động này không thể hoàn tác.')) {
-                return;
-            }
-            handleClearDatabase(uploadMessage, clearDbBtn);
-        });
-    }
-    
-    if (mixBtn) {
-        mixBtn.addEventListener('click', () => {
-            handleMixRequest(mixMessage, mixBtn, downloadBtn);
-        });
-    }
-});
