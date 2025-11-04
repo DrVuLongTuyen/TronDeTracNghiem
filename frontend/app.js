@@ -1,9 +1,9 @@
 // ==================================================================
 // == QUAN TRỌNG: HÃY ĐẢM BẢO 3 DÒNG NÀY LÀ CỦA BẠN ==
 // ==================================================================
-const SUPABASE_URL = '[https://iezcijerbmsgsxilsixo.supabase.co](https://iezcijerbmsgsxilsixo.supabase.co)'; // Giữ nguyên URL của bạn
+const SUPABASE_URL = 'https://iezcijerbmsgsxilsixo.supabase.co'; // (SỬA LỖI) Đã xóa [...]()
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllemNpamVyYm1zZ3N4aWxzaXhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NDg5MjAsImV4cCI6MjA3NzEyNDkyMH0.g_VIc4KIpJhKutJ3rBCbKB02gKcjhmaGMsvbG9rjcUk'; // Giữ nguyên Key ANNON của bạn
-const API_BASE_URL = '[https://trondetn-api.onrender.com](https://trondetn-api.onrender.com)'; // Giữ nguyên URL API Render của bạn
+const API_BASE_URL = 'https://trondetn-api.onrender.com'; // (SỬA LỖI) Đã xóa [...]()
 // ==================================================================
 
 // (SỬA LỖI) Thêm lại dòng import này
