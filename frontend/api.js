@@ -147,15 +147,18 @@ export async function handleMixRequest(supabase, msgEl, btnEl, downloadBtnEl) {
         });
 
         if (response.ok) {
-            // Lấy tên tệp (có ngày giờ) từ server
-            const contentDisposition = response.headers.get('content-disposition') || response.headers.get('Content-Disposition');
+            // *** SỬA LỖI (BƯỚC 6) ***
+            // Chỉ đọc 'Content-Disposition' (viết hoa chuẩn)
+            const contentDisposition = response.headers.get('Content-Disposition');
             let downloadName = `Bo_de_tron_${baseName}.zip`; 
+            
             if (contentDisposition) {
                 const filenameMatch = contentDisposition.match(/filename="(.+)"/);
                 if (filenameMatch && filenameMatch.length > 1) {
                     downloadName = filenameMatch[1];
                 }
             }
+            // *** KẾT THÚC SỬA LỖI ***
 
             const blob = await response.blob();
             const downloadUrl = URL.createObjectURL(blob);
