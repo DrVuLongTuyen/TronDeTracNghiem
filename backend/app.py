@@ -11,7 +11,6 @@ from docx_builder import build_mixed_test_zip
 
 # --- Cấu hình ---
 app = Flask(__name__)
-# (SỬA LỖI YC1) Xóa expose_headers, chúng ta sẽ làm thủ công
 CORS(app) 
 
 # --- Kết nối Supabase ---
@@ -31,7 +30,26 @@ else:
 
 @app.route('/')
 def home():
-    return "Xin chào, API Backend của TronDeTN (Phiên bản GĐ4.1) đang hoạt động!"
+    return "Xin chào, API Backend của TronDeTN (Phiên bản GĐ4.2) đang hoạt động!"
+
+# === (YÊU CẦU 15A) API ĐÁNH THỨC ===
+@app.route('/wake', methods=['GET'])
+def handle_wake():
+    """
+    Endpoint này dùng để "đánh thức" Render (backend) và Supabase (database)
+    trước khi thực hiện các tác vụ nặng (upload, clear, mix).
+    """
+    try:
+        # Chạy một lệnh Supabase siêu nhẹ để "đánh thức" CSDL
+        if supabase:
+            supabase.table('profiles').select('id', count='exact').limit(1).execute()
+        
+        return jsonify({"message": "Đã thức!"}), 200
+    except Exception as e:
+        # Kể cả khi lỗi (ví dụ: CSDL đang ngủ), nó vẫn đánh thức Render
+        return jsonify({"message": f"Đang trong quá trình đánh thức: {e}"}), 503 
+# === KẾT THÚC YÊU CẦU 15A ===
+
 
 def get_user_id_from_token(request):
     auth_header = request.headers.get('Authorization')
@@ -67,7 +85,7 @@ def handle_upload():
                 rows_to_insert.append({
                     "user_id": user_id, 
                     "group_tag": group["group_tag"], 
-                    "is_fixed": group["is_fixed"], # Cột này đã được thêm bằng SQL
+                    "is_fixed": group["is_fixed"],
                     "question_text": question["question_text"], 
                     "answers": json.dumps(question["answers"], ensure_ascii=False),
                     "correct_answer": question.get("correct_answer")
@@ -142,9 +160,6 @@ def handle_mix():
         current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
         download_name = f'Bo_de_tron_{base_name}_{current_time}.zip'
         
-        # (SỬA LỖI YC1) Gửi file và THÊM HEADER THỦ CÔNG
-        
-        # 1. Tạo response từ send_file
         response = send_file(
             zip_buffer,
             mimetype='application/zip',
@@ -152,10 +167,8 @@ def handle_mix():
             download_name=download_name
         )
         
-        # 2. Thêm header thủ công để cho phép api.js (frontend) đọc
         response.headers['Access-Control-Expose-Headers'] = 'Content-Disposition'
         
-        # 3. Trả về response đã sửa
         return response
         
     except Exception as e:
