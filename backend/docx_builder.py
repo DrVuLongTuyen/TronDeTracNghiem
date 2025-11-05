@@ -151,6 +151,7 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests):
     return doc_buffer
 
 # === (LOGIC NGẮT TRANG V7) HÀM CHÍNH TẠO FILE ZIP ===
+# ĐÂY LÀ PHẦN BỊ CẮT CỤT TRONG LẦN GỬI TRƯỚC
 def build_mixed_test_zip(groups, num_tests, base_name, header_data):
     
     question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
@@ -234,4 +235,102 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             # Giải pháp an toàn nhất, chấp nhận lỗi ngắt trang (nếu có)
             style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10), space_before=0, keep_with_next=False, page_break_before=False)
             
-            question_counter =
+            # (FIX V8) ĐÂY LÀ DÒNG GÂY LỖI
+            question_counter = 1
+            sorted_group_tags = sorted(groups.keys())
+            
+            for tag in sorted_group_tags:
+                question_list = groups[tag]
+                
+                if tag in ['g1', 'g3']:
+                    random.shuffle(question_list)
+                
+                for q in question_list:
+                    original_text = q['question_text']
+                    match = question_regex.match(original_text)
+                    clean_question_text = original_text.replace(match.group(0), "").strip() if match else original_text.strip()
+                    
+                    # 3. TẠO "CÂU X"
+                    p_q = doc.add_paragraph()
+                    # (FIX V7) GIỮ keep_with_next (để dính vào bảng đáp án)
+                    # (FIX V8) ĐÂY LÀ DÒNG BỊ LỖI NGOẶC V6
+                    style_paragraph(p_q, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0, page_break_before=False, keep_with_next=True)
+                    
+                    run_prefix = p_q.add_run(f"Câu {question_counter}: ")
+                    style_run(run_prefix, bold=True) 
+                    
+                    run_text = p_q.add_run(clean_question_text)
+                    style_run(run_text, bold=False)
+                    question_counter += 1
+                    
+                    answers = json.loads(q['answers'])
+                    correct_answer_original_prefix = q['correct_answer'] 
+                    
+                    if tag in ['g2', 'g3']:
+                        random.shuffle(answers)
+                    
+                    answer_prefixes = ['A', 'B', 'C', 'D']
+                    found_correct_answer = False 
+                    
+                    # 4. TẠO BẢNG ĐÁP ÁN (Đã chuẩn)
+                    table_ans = doc.add_table(rows=2, cols=2)
+                    table_ans.autofit = True
+                    table_ans.alignment = WD_TABLE_ALIGNMENT.CENTER 
+                    
+                    ans_cells = [table_ans.cell(0,0), table_ans.cell(0,1), table_ans.cell(1,0), table_ans.cell(1,1)]
+                    
+                    for j, ans in enumerate(answers[:4]):
+                        new_prefix = answer_prefixes[j] 
+                        
+                        p_ans = ans_cells[j].paragraphs[0]
+                        ans_cells[j].vertical_alignment = WD_ALIGN_VERTICAL.TOP 
+                        
+                        style_paragraph(p_ans, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0, page_break_before=False)
+                        p_ans.paragraph_format.left_indent = Cm(0.5)
+                        
+                        run_p_prefix = p_ans.add_run(f"{new_prefix}. ")
+                        style_run(run_p_prefix, bold=True) 
+                        
+                        run_p_text = p_ans.add_run(ans['text'])
+                        style_run(run_text)
+                        
+                        if ans['prefix'] == correct_answer_original_prefix:
+                            answer_key_map[test_code].append(new_prefix)
+                            found_correct_answer = True
+
+                    if not found_correct_answer:
+                        answer_key_map[test_code].append('?') 
+
+            # TẠO KHỐI KÝ TÊN (Đã chuẩn)
+            doc.add_paragraph() 
+            
+            p_signer_base = doc.add_paragraph()
+            tab_stops_signer = p_signer_base.paragraph_format.tab_stops
+            tab_stops_signer.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.CENTER)
+            style_paragraph(p_signer_base, line_spacing=1.15, space_after=0)
+
+            run_date = p_signer_base.add_run("\tCần Thơ, ngày... tháng... năm...\n")
+            style_run(run_date, italic=True)
+            
+            run_signer = p_signer_base.add_run("\tGiảng viên tổng hợp đề\n")
+            style_run(run_signer, bold=True)
+            
+            run_name = p_signer_base.add_run("\t(Ký, ghi rõ họ tên)")
+            style_run(run_name, italic=True)
+            
+            # TẠO FOOTER (Đã chuẩn V7)
+            create_footer(doc, question_counter - 1)
+
+            doc_buffer = io.BytesIO()
+            doc.save(doc_buffer)
+            doc_buffer.seek(0)
+            
+            file_name = f"Ma_de_{test_code}.docx"
+            zip_file.writestr(file_name, doc_buffer.read())
+
+        answer_key_buffer = create_answer_key_doc(answer_key_map, base_name, num_tests)
+        zip_file.writestr(f"Dap_an_Tong_hop_{base_name}.docx", answer_key_buffer.read())
+
+    zip_buffer.seek(0)
+    
+    return zip_buffer
