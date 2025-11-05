@@ -42,7 +42,7 @@ def set_paragraph_border(paragraph):
     pBdr.append(topBdr)
     pPr.append(pBdr)
 
-# === (FIX V9) HÀM TẠO FOOTER (TĨNH HÓA ĐỂ SỬA LỖI) ===
+# === HÀM TẠO FOOTER (LOGIC V7 ĐÃ CHUẨN) ===
 def create_footer(doc, total_questions):
     section = doc.sections[0]
     footer = section.footer
@@ -64,17 +64,52 @@ def create_footer(doc, total_questions):
     run = p_footer.add_run("Ghi chú: ")
     style_run(run, bold=True, italic=True, size=11)
     
-    # (FIX V9) Ghi số câu tĩnh
-    run = p_footer.add_run(f"Đề thi gồm {total_questions} câu.")
+    run = p_footer.add_run(f"Đề thi gồm {total_questions} câu, được in trên ")
+    style_run(run, bold=False, italic=True, size=11)
+    
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'begin')
+    run._r.append(fldChar)
+    instrText = OxmlElement('w:instrText')
+    instrText.set(qn('xml:space'), 'preserve')
+    instrText.text = 'NUMPAGES'
+    run._r.append(instrText)
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'end')
+    run._r.append(fldChar)
+    
+    run = p_footer.add_run(" trang giấy A4")
     style_run(run, bold=False, italic=True, size=11)
     
     p_footer.add_run("\t")
     
-    # (FIX V9) Ghi chữ "Trang..." tĩnh.
-    # Chúng ta sẽ khôi phục số trang động SAU KHI xác nhận
-    # footer đã xuất hiện trở lại.
-    run = p_footer.add_run("Trang...")
+    run = p_footer.add_run("Trang ")
     style_run(run, bold=False, italic=False, size=11)
+    
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'begin')
+    run._r.append(fldChar)
+    instrText = OxmlElement('w:instrText')
+    instrText.set(qn('xml:space'), 'preserve')
+    instrText.text = 'PAGE'
+    run._r.append(instrText)
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'end')
+    run._r.append(fldChar)
+
+    run = p_footer.add_run("/")
+    style_run(run, bold=False, italic=False, size=11)
+
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'begin')
+    run._r.append(fldChar)
+    instrText = OxmlElement('w:instrText')
+    instrText.set(qn('xml:space'), 'preserve')
+    instrText.text = 'NUMPAGES'
+    run._r.append(instrText)
+    fldChar = OxmlElement('w:fldChar')
+    fldChar.set(qn('w:fldCharType'), 'end')
+    run._r.append(fldChar)
 
 
 # === HÀM TẠO ĐÁP ÁN (KHÔNG ĐỔI) ===
@@ -115,7 +150,7 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests):
     doc_buffer.seek(0)
     return doc_buffer
 
-# === (FIX V9) HÀM CHÍNH TẠO FILE ZIP ===
+# === (LOGIC NGẮT TRANG V11) HÀM CHÍNH TẠO FILE ZIP ===
 def build_mixed_test_zip(groups, num_tests, base_name, header_data):
     
     question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
@@ -179,7 +214,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             style_run(run_time, bold=False, size=12) 
             style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=0) 
 
-            # --- (FIX V9) ---
+            # --- (LOGIC NGẮT TRANG V11) ---
             
             # 1. TẠO "ĐỀ SỐ"
             doc_text = "(HSSV không được sử dụng tài liệu)" if not allow_documents else "(HSSV được sử dụng tài liệu)"
@@ -188,15 +223,16 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             style_run(run_de, bold=True, size=13)
             run_doc = p_de.add_run(doc_text)
             style_run(run_doc, bold=False, size=13)
-            # (FIX V9) XÓA keep_with_next. Chỉ thêm dãn đoạn.
-            style_paragraph(p_de, line_spacing=1.15, space_after=0, keep_with_next=False, space_before=Pt(6))
+            # (FIX V11) XÓA space_before=Pt(6). Header và Đề số sẽ ở Trang 1.
+            style_paragraph(p_de, line_spacing=1.15, space_after=0, keep_with_next=False, space_before=0)
 
             # 2. TẠO "NỘI DUNG ĐỀ THI"
             p_title = doc.add_paragraph()
             run_title = p_title.add_run("NỘI DUNG ĐỀ THI")
             style_run(run_title, bold=True, size=13)
-            # (FIX V9) XÓA page_break_before và keep_with_next.
-            style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10), space_before=0, keep_with_next=False, page_break_before=False)
+            # (FIX V11) Thêm page_break_before=True.
+            # BẮT BUỘC "NỘI DUNG ĐỀ THI" LUÔN BẮT ĐẦU Ở TRANG 2.
+            style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10), space_before=0, keep_with_next=False, page_break_before=True)
             
             question_counter = 1
             sorted_group_tags = sorted(groups.keys())
@@ -214,7 +250,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
                     
                     # 3. TẠO "CÂU X"
                     p_q = doc.add_paragraph()
-                    # (FIX V9) GIỮ keep_with_next (để dính vào bảng đáp án)
+                    # (FIX V11) GIỮ keep_with_next (để dính vào bảng đáp án)
                     style_paragraph(p_q, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0, page_break_before=False, keep_with_next=True)
                     
                     run_prefix = p_q.add_run(f"Câu {question_counter}: ")
@@ -279,7 +315,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             run_name = p_signer_base.add_run("\t(Ký, ghi rõ họ tên)")
             style_run(run_name, italic=True)
             
-            # TẠO FOOTER (Đã chuẩn V9 - Tĩnh)
+            # TẠO FOOTER (Đã chuẩn V7)
             create_footer(doc, question_counter - 1)
 
             doc_buffer = io.BytesIO()
