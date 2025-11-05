@@ -12,7 +12,7 @@ from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 import re 
 
-# === HÀM STYLE CHUNG ===
+# === HÀM STYLE CHUNG (KHÔNG ĐỔI) ===
 def style_run(run, bold=False, italic=False, size=13):
     run.font.name = 'Times New Roman'
     run.font.size = Pt(size)
@@ -28,22 +28,21 @@ def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_a
     p.paragraph_format.keep_with_next = keep_with_next 
     p.paragraph_format.widow_control = False 
 
-# === HÀM TẠO ĐƯỜNG KẺ NGANG (BORDER) CHO PARAGRAPH ===
+# === HÀM TẠO ĐƯỜNG KẺ NGANG (BORDER) CHO PARAGRAPH (KHÔNG ĐỔI) ===
 def set_paragraph_border(paragraph):
-    """Áp dụng một đường kẻ TOP BORDER (dotted) cho paragraph."""
     pPr = paragraph._p.get_or_add_pPr() 
     pBdr = OxmlElement('w:pBdr')       
     
     topBdr = OxmlElement('w:top')
-    topBdr.set(qn('w:val'), 'dotted') # Dùng 'dotted' như file mẫu
-    topBdr.set(qn('w:sz'), '2') # Kích thước 1/4 pt (2/8)       
+    topBdr.set(qn('w:val'), 'dotted') 
+    topBdr.set(qn('w:sz'), '2')     
     topBdr.set(qn('w:space'), '1')
     topBdr.set(qn('w:color'), 'auto')
     
     pBdr.append(topBdr)
     pPr.append(pBdr)
 
-# === HÀM TẠO FOOTER (V3 - ĐÃ CHUẨN THEO MẪU) ===
+# === (SỬA LỖI YC7 V5) HÀM TẠO FOOTER (ĐƠN GIẢN HÓA) ===
 def create_footer(doc, total_questions):
     section = doc.sections[0]
     footer = section.footer
@@ -52,10 +51,8 @@ def create_footer(doc, total_questions):
     section.footer_distance = Cm(1)
     section.different_first_page_header_footer = False
     
-    if footer.paragraphs:
-        p_footer = footer.paragraphs[0]
-    else:
-        p_footer = footer.add_paragraph()
+    # LUÔN LUÔN LÀM VIỆC TRÊN PARAGRAPH ĐẦU TIÊN CỦA FOOTER
+    p_footer = footer.paragraphs[0]
     p_footer.clear()
         
     # 1. Áp dụng đường kẻ
@@ -63,23 +60,19 @@ def create_footer(doc, total_questions):
     
     # 2. Đặt Tab Căn Phải
     tab_stops = p_footer.paragraph_format.tab_stops
-    tab_stops.add_tab_stop(Cm(18), WD_TAB_ALIGNMENT.RIGHT)
+    tab_stops.clear_all() # Xóa mọi tab cũ
+    tab_stops.add_tab_stop(Cm(18.9), WD_TAB_ALIGNMENT.RIGHT) # 18.9cm cho lề 1cm (trang A4 21cm)
     
     # 3. Đẩy text xuống dưới đường kẻ
     style_paragraph(p_footer, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1, space_after=0, space_before=Pt(4))
     
     # 4. Thêm "Ghi chú:" (Bold + Italic)
     run = p_footer.add_run("Ghi chú: ")
-    run.font.name = 'Times New Roman'
-    run.font.size = Pt(11)
-    run.font.bold = True
-    run.font.italic = True
+    style_run(run, bold=True, italic=True, size=11)
     
     # 5. Thêm nội dung (Italic)
     run = p_footer.add_run(f"Đề thi gồm {total_questions} câu, được in trên ")
-    run.font.name = 'Times New Roman'
-    run.font.size = Pt(11)
-    run.font.italic = True
+    style_run(run, bold=False, italic=True, size=11)
     
     # Field code TỔNG SỐ TRANG (NUMPAGES)
     fldChar = OxmlElement('w:fldChar')
@@ -94,17 +87,14 @@ def create_footer(doc, total_questions):
     run._r.append(fldChar)
     
     run = p_footer.add_run(" trang giấy A4")
-    run.font.name = 'Times New Roman'
-    run.font.size = Pt(11)
-    run.font.italic = True
+    style_run(run, bold=False, italic=True, size=11)
     
     # 6. Thêm ký tự Tab
     p_footer.add_run("\t")
     
     # 7. Thêm "Trang X/Y"
     run = p_footer.add_run("Trang ")
-    run.font.name = 'Times New Roman'
-    run.font.size = Pt(11)
+    style_run(run, bold=False, italic=False, size=11)
     
     # Field code TRANG HIỆN TẠI (PAGE)
     fldChar = OxmlElement('w:fldChar')
@@ -119,8 +109,7 @@ def create_footer(doc, total_questions):
     run._r.append(fldChar)
 
     run = p_footer.add_run("/")
-    run.font.name = 'Times New Roman'
-    run.font.size = Pt(11)
+    style_run(run, bold=False, italic=False, size=11)
 
     # Field code TỔNG SỐ TRANG (NUMPAGES)
     fldChar = OxmlElement('w:fldChar')
@@ -135,7 +124,7 @@ def create_footer(doc, total_questions):
     run._r.append(fldChar)
 
 
-# === HÀM TẠO ĐÁP ÁN (Không đổi) ===
+# === HÀM TẠO ĐÁP ÁN (KHÔNG ĐỔI) ===
 def create_answer_key_doc(answer_key_map, base_name, num_tests):
     doc = Document()
     doc.add_heading("NỘI DUNG ĐÁP ÁN", 0).alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -173,7 +162,7 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests):
     doc_buffer.seek(0)
     return doc_buffer
 
-# === (SỬA LỖI YC6 V4) HÀM CHÍNH ĐỂ TẠO FILE ZIP ===
+# === (SỬA LỖI YC6 V5) HÀM CHÍNH TẠO FILE ZIP ===
 def build_mixed_test_zip(groups, num_tests, base_name, header_data):
     
     question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
@@ -237,7 +226,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             style_run(run_time, bold=False, size=12) 
             style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=0) 
 
-            # --- (SỬA LỖI YC6 V4) ---
+            # --- (SỬA LỖI YC6 V5) ---
             
             # 1. TẠO "ĐỀ SỐ"
             doc_text = "(HSSV không được sử dụng tài liệu)" if not allow_documents else "(HSSV được sử dụng tài liệu)"
@@ -246,15 +235,16 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             style_run(run_de, bold=True, size=13)
             run_doc = p_de.add_run(doc_text)
             style_run(run_doc, bold=False, size=13)
-            # (FIX V4) Thêm space_before để cách Header, XÓA keep_with_next
-            style_paragraph(p_de, line_spacing=1.15, space_after=0, keep_with_next=False, page_break_before=False, space_before=Pt(12))
+            # (FIX V5) XÓA keep_with_next. Thêm dãn đoạn.
+            style_paragraph(p_de, line_spacing=1.15, space_after=0, keep_with_next=False, space_before=Pt(6))
 
             # 2. TẠO "NỘI DUNG ĐỀ THI"
             p_title = doc.add_paragraph()
             run_title = p_title.add_run("NỘI DUNG ĐỀ THI")
             style_run(run_title, bold=True, size=13)
-            # (FIX V4) XÓA keep_with_next. Chỉ giữ space_after để cách Câu 1
-            style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10), space_before=0, keep_with_next=False, page_break_before=False)
+            # (FIX V5) XÓA keep_with_next. Thêm ngắt trang BẮT BUỘC.
+            # Đây là giải pháp an toàn nhất. Header sẽ luôn ở Trang 1, Nội dung luôn ở Trang 2.
+            style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10), space_before=0, keep_with_next=False, page_break_before=True)
             
             question_counter = 1
             sorted_group_tags = sorted(groups.keys())
@@ -272,7 +262,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
                     
                     # 3. TẠO "CÂU X"
                     p_q = doc.add_paragraph()
-                    # (FIX V4) GIỮ keep_with_next (để dính vào bảng đáp án)
+                    # (FIX V5) GIỮ keep_with_next (để dính vào bảng đáp án)
                     style_paragraph(p_q, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0, page_break_before=False, keep_with_next=True)
                     
                     run_prefix = p_q.add_run(f"Câu {question_counter}: ")
@@ -291,7 +281,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
                     answer_prefixes = ['A', 'B', 'C', 'D']
                     found_correct_answer = False 
                     
-                    # 4. TẠO BẢNG ĐÁP ÁN
+                    # 4. TẠO BẢNG ĐÁP ÁN (Đã chuẩn)
                     table_ans = doc.add_table(rows=2, cols=2)
                     table_ans.autofit = True
                     table_ans.alignment = WD_TABLE_ALIGNMENT.CENTER 
@@ -325,7 +315,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             
             p_signer_base = doc.add_paragraph()
             tab_stops_signer = p_signer_base.paragraph_format.tab_stops
-            tab_stop_signer = tab_stops_signer.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.CENTER)
+            tab_stops_signer.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.CENTER)
             style_paragraph(p_signer_base, line_spacing=1.15, space_after=0)
 
             run_date = p_signer_base.add_run("\tCần Thơ, ngày... tháng... năm...\n")
@@ -337,7 +327,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             run_name = p_signer_base.add_run("\t(Ký, ghi rõ họ tên)")
             style_run(run_name, italic=True)
             
-            # TẠO FOOTER (Đã chuẩn)
+            # TẠO FOOTER (Đã chuẩn V5)
             create_footer(doc, question_counter - 1)
 
             doc_buffer = io.BytesIO()
