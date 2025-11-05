@@ -34,47 +34,39 @@ def set_paragraph_border(paragraph):
     pBdr = OxmlElement('w:pBdr')       
     
     topBdr = OxmlElement('w:top')
-    topBdr.set(qn('w:val'), 'dotted') # Dùng 'dotted' như file mẫu
-    topBdr.set(qn('w:sz'), '2') # Kích thước 1/4 pt (2/8)       
+    topBdr.set(qn('w:val'), 'dotted') 
+    topBdr.set(qn('w:sz'), '2')     
     topBdr.set(qn('w:space'), '1')
     topBdr.set(qn('w:color'), 'auto')
     
     pBdr.append(topBdr)
     pPr.append(pBdr)
 
-# === (FIX V7) HÀM TẠO FOOTER (QUAY LẠI LOGIC V3 ĐÃ CHUẨN) ===
+# === HÀM TẠO FOOTER (LOGIC V7 ĐÃ CHUẨN) ===
 def create_footer(doc, total_questions):
     section = doc.sections[0]
     footer = section.footer
     
-    # Set Footer distance là 1cm (như file mẫu)
     section.footer_distance = Cm(1)
     section.different_first_page_header_footer = False
     
-    # LUÔN LUÔN LÀM VIỆC TRÊN PARAGRAPH ĐẦU TIÊN CỦA FOOTER
     p_footer = footer.paragraphs[0]
     p_footer.clear()
         
-    # 1. Áp dụng đường kẻ
     set_paragraph_border(p_footer)
     
-    # 2. Đặt Tab Căn Phải
     tab_stops = p_footer.paragraph_format.tab_stops
-    tab_stops.clear_all() # Xóa mọi tab cũ
-    tab_stops.add_tab_stop(Cm(18.9), WD_TAB_ALIGNMENT.RIGHT) # 18.9cm cho lề 1cm (trang A4 21cm)
+    tab_stops.clear_all() 
+    tab_stops.add_tab_stop(Cm(18.9), WD_TAB_ALIGNMENT.RIGHT) 
     
-    # 3. Đẩy text xuống dưới đường kẻ
     style_paragraph(p_footer, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1, space_after=0, space_before=Pt(4))
     
-    # 4. Thêm "Ghi chú:" (Bold + Italic)
     run = p_footer.add_run("Ghi chú: ")
     style_run(run, bold=True, italic=True, size=11)
     
-    # 5. Thêm nội dung (Italic)
     run = p_footer.add_run(f"Đề thi gồm {total_questions} câu, được in trên ")
     style_run(run, bold=False, italic=True, size=11)
     
-    # Field code TỔNG SỐ TRANG (NUMPAGES)
     fldChar = OxmlElement('w:fldChar')
     fldChar.set(qn('w:fldCharType'), 'begin')
     run._r.append(fldChar)
@@ -89,14 +81,11 @@ def create_footer(doc, total_questions):
     run = p_footer.add_run(" trang giấy A4")
     style_run(run, bold=False, italic=True, size=11)
     
-    # 6. Thêm ký tự Tab
     p_footer.add_run("\t")
     
-    # 7. Thêm "Trang X/Y"
     run = p_footer.add_run("Trang ")
     style_run(run, bold=False, italic=False, size=11)
     
-    # Field code TRANG HIỆN TẠI (PAGE)
     fldChar = OxmlElement('w:fldChar')
     fldChar.set(qn('w:fldCharType'), 'begin')
     run._r.append(fldChar)
@@ -111,7 +100,6 @@ def create_footer(doc, total_questions):
     run = p_footer.add_run("/")
     style_run(run, bold=False, italic=False, size=11)
 
-    # Field code TỔNG SỐ TRANG (NUMPAGES)
     fldChar = OxmlElement('w:fldChar')
     fldChar.set(qn('w:fldCharType'), 'begin')
     run._r.append(fldChar)
@@ -162,7 +150,7 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests):
     doc_buffer.seek(0)
     return doc_buffer
 
-# === (SỬA LỖI YC6 V7) HÀM CHÍNH TẠO FILE ZIP ===
+# === (LOGIC NGẮT TRANG V7) HÀM CHÍNH TẠO FILE ZIP ===
 def build_mixed_test_zip(groups, num_tests, base_name, header_data):
     
     question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
@@ -226,7 +214,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             style_run(run_time, bold=False, size=12) 
             style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=0) 
 
-            # --- (SỬA LỖI YC6 V7) ---
+            # --- (LOGIC NGẮT TRANG V7) ---
             
             # 1. TẠO "ĐỀ SỐ"
             doc_text = "(HSSV không được sử dụng tài liệu)" if not allow_documents else "(HSSV được sử dụng tài liệu)"
@@ -243,26 +231,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             run_title = p_title.add_run("NỘI DUNG ĐỀ THI")
             style_run(run_title, bold=True, size=13)
             # (FIX V7) XÓA page_break_before và keep_with_next.
-            # Đây là giải pháp an toàn nhất, chấp nhận lỗi ngắt trang
-            # (nếu có) còn hơn là lỗi 4 trang.
+            # Giải pháp an toàn nhất, chấp nhận lỗi ngắt trang (nếu có)
             style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10), space_before=0, keep_with_next=False, page_break_before=False)
             
-            question_counter = 1
-            sorted_group_tags = sorted(groups.keys())
-            
-            for tag in sorted_group_tags:
-                question_list = groups[tag]
-                
-                if tag in ['g1', 'g3']:
-                    random.shuffle(question_list)
-                
-                for q in question_list:
-                    original_text = q['question_text']
-                    match = question_regex.match(original_text)
-                    clean_question_text = original_text.replace(match.group(0), "").strip() if match else original_text.strip()
-                    
-                    # 3. TẠO "CÂU X"
-                    p_q = doc.add_paragraph()
-                    # (FIX V7) GIỮ keep_with_next (để dính vào bảng đáp án)
-                    # Đây là lần duy nhất dùng keep_with_next
-                    style_paragraph(p_q, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0
+            question_counter =
