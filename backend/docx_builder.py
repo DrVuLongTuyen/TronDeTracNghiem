@@ -53,7 +53,11 @@ def create_footer(doc, total_questions):
     section = doc.sections[0]
     footer = section.footer
     
-    section.footer_distance = Cm(1)
+    # === (SỬA LỖI V17) ===
+    # Đặt lề footer là 0.5cm (theo hình ảnh mới nhất)
+    section.footer_distance = Cm(0.5)
+    # === KẾT THÚC SỬA LỖI V17 ===
+    
     section.different_first_page_header_footer = False
     
     for p in footer.paragraphs:
@@ -62,7 +66,6 @@ def create_footer(doc, total_questions):
     # 1. Thêm đường kẻ ngang LÊN TRÊN (p_line)
     p_line = footer.add_paragraph()
     set_paragraph_border(p_line)
-    # (FIX V16) Đảm bảo space_after=Pt(0)
     style_paragraph(p_line, space_after=Pt(0), space_before=Pt(0))
 
     # 2. Thêm bảng 2 cột BÊN DƯỚI đường kẻ
@@ -195,6 +198,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             section = doc.sections[0]
             section.left_margin = Cm(1)
             section.right_margin = Cm(1)
+            # (V17) Đã xác nhận Top 1cm
             section.top_margin = Cm(1)
             section.bottom_margin = Cm(1)
             
@@ -241,14 +245,12 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             style_run(run_de, bold=True, size=13)
             run_doc = p_de.add_run(doc_text)
             style_run(run_doc, bold=False, size=13)
-            # (FIX V16) space_after=Pt(0)
             style_paragraph(p_de, line_spacing=1.15, space_after=Pt(0), keep_with_next=False, space_before=Pt(6))
 
             # 2. TẠO "NỘI DUNG ĐỀ THI"
             p_title = doc.add_paragraph()
             run_title = p_title.add_run("NỘI DUNG ĐỀ THI")
             style_run(run_title, bold=True, size=13)
-            # (FIX V16) space_after=Pt(0) THEO YÊU CẦU CỦA BẠN
             style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(0), space_before=0, keep_with_next=False, page_break_before=False)
             
             question_counter = 1
@@ -331,7 +333,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             run_name = p_signer_base.add_run("\t(Ký, ghi rõ họ tên)")
             style_run(run_name, italic=True)
             
-            # TẠO FOOTER (Đã chuẩn V16)
+            # TẠO FOOTER (Đã chuẩn V17)
             create_footer(doc, question_counter - 1)
 
             doc_buffer = io.BytesIO()
