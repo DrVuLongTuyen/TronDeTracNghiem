@@ -18,23 +18,28 @@ def style_run(run, bold=False, italic=False, size=13):
     run.font.size = Pt(size)
     run.font.bold = bold
     run.font.italic = italic
-    
-def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_after=0, page_break_before=False, keep_with_next=False, space_before=0):
+
+# === (FIX V16) SỬA LỖI SPACING 2481PT ===
+def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_after=Pt(0), page_break_before=False, keep_with_next=False, space_before=Pt(0)):
+    """
+    Sửa lỗi V16:
+    1. Đặt default cho space_after/space_before là Pt(0).
+    2. Gán thẳng giá trị (không bọc Pt() nữa) để tránh lỗi Pt(Pt(x)).
+    """
     p.paragraph_format.alignment = align
     p.paragraph_format.line_spacing = line_spacing
-    p.paragraph_format.space_after = Pt(space_after)
-    p.paragraph_format.space_before = Pt(space_before) 
+    p.paragraph_format.space_after = space_after # Gán thẳng, không Pt()
+    p.paragraph_format.space_before = space_before # Gán thẳng, không Pt()
     p.paragraph_format.page_break_before = page_break_before 
     p.paragraph_format.keep_with_next = keep_with_next 
     p.paragraph_format.widow_control = False 
 
-# === (FIX V15) HÀM TẠO BORDER (QUAY LẠI V2/V3) ===
+# === HÀM TẠO BORDER (QUAY LẠI V2/V3) ===
 def set_paragraph_border(paragraph):
     pPr = paragraph._p.get_or_add_pPr() 
     pBdr = OxmlElement('w:pBdr')       
     
     topBdr = OxmlElement('w:top')
-    # (FIX V15) Quay lại đường kẻ 'single' 0.5pt
     topBdr.set(qn('w:val'), 'single') 
     topBdr.set(qn('w:sz'), '4') # Size (4 = 0.5 pt)       
     topBdr.set(qn('w:space'), '1')
@@ -43,24 +48,24 @@ def set_paragraph_border(paragraph):
     pBdr.append(topBdr)
     pPr.append(pBdr)
 
-# === (FIX V15) HÀM TẠO FOOTER (QUAY LẠI V2/V3) ===
+# === HÀM TẠO FOOTER (QUAY LẠI V2/V3) ===
 def create_footer(doc, total_questions):
     section = doc.sections[0]
     footer = section.footer
     
-    # (FIX V15) Đặt lại lề footer 1cm
     section.footer_distance = Cm(1)
     section.different_first_page_header_footer = False
     
     for p in footer.paragraphs:
         p.clear()
         
-    # (FIX V15) 1. Thêm đường kẻ ngang LÊN TRÊN (p_line)
+    # 1. Thêm đường kẻ ngang LÊN TRÊN (p_line)
     p_line = footer.add_paragraph()
     set_paragraph_border(p_line)
-    style_paragraph(p_line, space_after=Pt(2)) # Khoảng cách nhỏ
+    # (FIX V16) Đảm bảo space_after=Pt(0)
+    style_paragraph(p_line, space_after=Pt(0), space_before=Pt(0))
 
-    # (FIX V15) 2. Thêm bảng 2 cột BÊN DƯỚI đường kẻ
+    # 2. Thêm bảng 2 cột BÊN DƯỚI đường kẻ
     footer_table = footer.add_table(rows=1, cols=2, width=doc.sections[0].page_width - doc.sections[0].left_margin - doc.sections[0].right_margin)
     
     # Cột 1: Ghi chú
@@ -73,7 +78,6 @@ def create_footer(doc, total_questions):
     run.font.size = Pt(11)
     run.font.italic = True
     
-    # Field code TỔNG SỐ TRANG (NUMPAGES)
     fldChar = OxmlElement('w:fldChar')
     fldChar.set(qn('w:fldCharType'), 'begin')
     run._r.append(fldChar)
@@ -99,7 +103,6 @@ def create_footer(doc, total_questions):
     run.font.name = 'Times New Roman'
     run.font.size = Pt(11)
     
-    # Field code TRANG HIỆN TẠI (PAGE)
     fldChar = OxmlElement('w:fldChar')
     fldChar.set(qn('w:fldCharType'), 'begin')
     run._r.append(fldChar)
@@ -115,7 +118,6 @@ def create_footer(doc, total_questions):
     run.font.name = 'Times New Roman'
     run.font.size = Pt(11)
 
-    # Field code TỔNG SỐ TRANG (NUMPAGES)
     fldChar = OxmlElement('w:fldChar')
     fldChar.set(qn('w:fldCharType'), 'begin')
     run._r.append(fldChar)
@@ -166,7 +168,7 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests):
     doc_buffer.seek(0)
     return doc_buffer
 
-# === (FIX V15) HÀM CHÍNH TẠO FILE ZIP ===
+# === (FIX V16) HÀM CHÍNH TẠO FILE ZIP ===
 def build_mixed_test_zip(groups, num_tests, base_name, header_data):
     
     question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
@@ -205,7 +207,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             p_school = cell_0.paragraphs[0]
             run_school = p_school.add_run(school_name)
             style_run(run_school, bold=True, size=12)
-            style_paragraph(p_school, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=0)
+            style_paragraph(p_school, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0))
             
             cell_1 = table_header.cell(0, 1)
             cell_1.width = Cm(10) 
@@ -213,24 +215,24 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             p_exam = cell_1.paragraphs[0]
             run_exam = p_exam.add_run(exam_name)
             style_run(run_exam, bold=True, size=12) 
-            style_paragraph(p_exam, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=0) 
+            style_paragraph(p_exam, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0)) 
             
             p_class = cell_1.add_paragraph()
             run_class = p_class.add_run(f"LỚP: {class_name}")
             style_run(run_class, bold=True, size=12) 
-            style_paragraph(p_class, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=0) 
+            style_paragraph(p_class, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0)) 
             
             p_subject = cell_1.add_paragraph()
             run_subject = p_subject.add_run(f"Tên học phần: {subject_name} (Lần {exam_iteration})")
             style_run(run_subject, bold=False, size=12) 
-            style_paragraph(p_subject, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=0) 
+            style_paragraph(p_subject, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0)) 
 
             p_time = cell_1.add_paragraph()
             run_time = p_time.add_run(f"Thời gian: {exam_time} phút (không kể thời gian phát đề)")
             style_run(run_time, bold=False, size=12) 
-            style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=0) 
+            style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0)) 
 
-            # --- (FIX V15 - NGẮT TRANG AN TOÀN) ---
+            # --- (FIX V16 - NGẮT TRANG AN TOÀN) ---
             
             # 1. TẠO "ĐỀ SỐ"
             doc_text = "(HSSV không được sử dụng tài liệu)" if not allow_documents else "(HSSV được sử dụng tài liệu)"
@@ -239,16 +241,15 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             style_run(run_de, bold=True, size=13)
             run_doc = p_de.add_run(doc_text)
             style_run(run_doc, bold=False, size=13)
-            # (FIX V15) XÓA TẤT CẢ: keep_with_next, space_before.
-            style_paragraph(p_de, line_spacing=1.15, space_after=0, keep_with_next=False, space_before=0)
+            # (FIX V16) space_after=Pt(0)
+            style_paragraph(p_de, line_spacing=1.15, space_after=Pt(0), keep_with_next=False, space_before=Pt(6))
 
             # 2. TẠO "NỘI DUNG ĐỀ THI"
             p_title = doc.add_paragraph()
             run_title = p_title.add_run("NỘI DUNG ĐỀ THI")
             style_run(run_title, bold=True, size=13)
-            # (FIX V15) XÓA TẤT CẢ: page_break_before, keep_with_next.
-            # Chỉ giữ lại dãn cách (space_after)
-            style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10), space_before=0, keep_with_next=False, page_break_before=False)
+            # (FIX V16) space_after=Pt(0) THEO YÊU CẦU CỦA BẠN
+            style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(0), space_before=0, keep_with_next=False, page_break_before=False)
             
             question_counter = 1
             sorted_group_tags = sorted(groups.keys())
@@ -266,8 +267,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
                     
                     # 3. TẠO "CÂU X"
                     p_q = doc.add_paragraph()
-                    # (FIX V15) CHỈ GIỮ 1 keep_with_next duy nhất
-                    style_paragraph(p_q, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0, page_break_before=False, keep_with_next=True)
+                    style_paragraph(p_q, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=Pt(0), page_break_before=False, keep_with_next=True)
                     
                     run_prefix = p_q.add_run(f"Câu {question_counter}: ")
                     style_run(run_prefix, bold=True) 
@@ -298,7 +298,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
                         p_ans = ans_cells[j].paragraphs[0]
                         ans_cells[j].vertical_alignment = WD_ALIGN_VERTICAL.TOP 
                         
-                        style_paragraph(p_ans, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=0, page_break_before=False)
+                        style_paragraph(p_ans, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=Pt(0), page_break_before=False)
                         p_ans.paragraph_format.left_indent = Cm(0.5)
                         
                         run_p_prefix = p_ans.add_run(f"{new_prefix}. ")
@@ -320,7 +320,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             p_signer_base = doc.add_paragraph()
             tab_stops_signer = p_signer_base.paragraph_format.tab_stops
             tab_stops_signer.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.CENTER)
-            style_paragraph(p_signer_base, line_spacing=1.15, space_after=0)
+            style_paragraph(p_signer_base, line_spacing=1.15, space_after=Pt(0))
 
             run_date = p_signer_base.add_run("\tCần Thơ, ngày... tháng... năm...\n")
             style_run(run_date, italic=True)
@@ -331,7 +331,7 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             run_name = p_signer_base.add_run("\t(Ký, ghi rõ họ tên)")
             style_run(run_name, italic=True)
             
-            # TẠO FOOTER (Đã chuẩn V15)
+            # TẠO FOOTER (Đã chuẩn V16)
             create_footer(doc, question_counter - 1)
 
             doc_buffer = io.BytesIO()
