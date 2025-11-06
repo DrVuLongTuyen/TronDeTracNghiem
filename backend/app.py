@@ -7,32 +7,29 @@ from flask import Flask, request, jsonify, send_file, make_response
 from flask_cors import CORS
 from supabase import create_client, Client 
 
-from docx_parser import parse_test_document
-from docx_builder import build_mixed_test_zip
+# === (FIX V23) XÓA BỎ IMPORT GÂY NẶNG MÁY ===
+# XÓA: from docx_parser import parse_test_document
+# XÓA: from docx_builder import build_mixed_test_zip
+# Chúng ta sẽ import chúng BÊN TRONG hàm.
 
 # --- Cấu hình ---
 app = Flask(__name__)
 CORS(app, expose_headers=['Content-Disposition'])
 
-# === (FIX V22) SỬA LỖI CRASH LOOP ===
-# 1. Khởi tạo supabase = None
-supabase: Client = None 
-
+# === (FIX V23) Quay lại logic kết nối V21 ===
+# (Chúng ta giả định Key đã đúng như bạn nói)
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-DATABASE_ERROR = None # Biến lưu lỗi
+supabase: Client = None 
+DATABASE_ERROR = None
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    DATABASE_ERROR = "Lỗi nghiêm trọng: Biến môi trường SUPABASE_URL hoặc SUPABASE_KEY chưa được cài đặt trên Render."
+try:
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    print("Đã kết nối Supabase (Backend Service Role)")
+except Exception as e:
+    DATABASE_ERROR = f"Lỗi khi khởi tạo Supabase client: {e}."
     print(DATABASE_ERROR)
-else:
-    try:
-        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-        print("Đã kết nối Supabase (Backend Service Role)")
-    except Exception as e:
-        DATABASE_ERROR = f"Lỗi khi khởi tạo Supabase client: {e}. Vui lòng kiểm tra lại SUPABASE_KEY (phải là service_role)."
-        print(DATABASE_ERROR)
-# === KẾT THÚC FIX V22 ===
+# === KẾT THÚC FIX V23 ===
 
 
 # === API ENDPOINTS ===
@@ -41,11 +38,10 @@ else:
 def home():
     if DATABASE_ERROR:
         return f"API ĐANG BỊ LỖI KẾT NỐI CSDL: {DATABASE_ERROR}", 500
-    return "Xin chào, API Backend của TronDeTN (Phiên bản V22) đang hoạt động!"
+    return "Xin chào, API Backend của TronDeTN (Phiên bản V23) đang hoạt động!"
 
 @app.route('/wake', methods=['GET'])
 def handle_wake():
-    # (FIX V22) Kiểm tra CSDL trước
     if DATABASE_ERROR or supabase is None:
         return jsonify({"error": f"Lỗi CSDL: {DATABASE_ERROR}"}), 500
         
@@ -57,7 +53,6 @@ def handle_wake():
 
 
 def get_user_id_from_token(request):
-    # (FIX V22) Kiểm tra CSDL trước
     if DATABASE_ERROR or supabase is None:
         raise Exception(f"Lỗi CSDL: {DATABASE_ERROR}")
         
@@ -72,6 +67,9 @@ def get_user_id_from_token(request):
 @app.route('/upload', methods=['POST'])
 def handle_upload():
     try:
+        # (FIX V23) Import "nặng" tại đây
+        from docx_parser import parse_test_document
+        
         user_id = get_user_id_from_token(request)
         if 'file' not in request.files: return jsonify({"error": "Không có tệp"}), 400
         file = request.files['file']
@@ -112,6 +110,9 @@ def handle_clear():
 @app.route('/mix', methods=['POST'])
 def handle_mix():
     try:
+        # (FIX V23) Import "nặng" tại đây
+        from docx_builder import build_mixed_test_zip
+        
         user_id = get_user_id_from_token(request)
         data = request.json
         num_tests = int(data.get('num_tests', 2))
