@@ -12,42 +12,88 @@ from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 import re 
 
-# === HÀM STYLE CHUNG (V16) ===
-def style_run(run, bold=False, italic=False, size=13):
-    run.font.name = 'Times New Roman'
-    run.font.size = Pt(size)
-    run.font.bold = bold
-    run.font.italic = italic
+# (MỚI V26) Import từ file utils
+from docx_utils import style_run, style_paragraph, set_paragraph_border
 
-def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_after=Pt(0), page_break_before=False, keep_with_next=False, space_before=Pt(0)):
-    p.paragraph_format.alignment = align
-    p.paragraph_format.line_spacing = line_spacing
-    p.paragraph_format.space_after = space_after
-    p.paragraph_format.space_before = space_before
-    p.paragraph_format.page_break_before = page_break_before 
-    p.paragraph_format.keep_with_next = keep_with_next 
-    p.paragraph_format.widow_control = False 
-
-# === HÀM TẠO BORDER (V16) ===
-def set_paragraph_border(paragraph):
-    pPr = paragraph._p.get_or_add_pPr() 
-    pBdr = OxmlElement('w:pBdr')       
+# === (MỚI V26) HÀM NỘI BỘ TẠO HEADER ===
+def _build_header(doc, header_data, logo_data=None):
+    """Hàm nội bộ: Xây dựng Header (Tên trường, Logo, Thông tin thi)"""
+    school_name = header_data.get('school_name', '').upper()
+    exam_name = header_data.get('exam_name', '').upper()
+    class_name = header_data.get('class_name', '').upper()
+    subject_name = header_data.get('subject_name', '')
+    exam_iteration = header_data.get('exam_iteration', '1')
+    exam_time = header_data.get('exam_time', '90')
     
-    topBdr = OxmlElement('w:top')
-    topBdr.set(qn('w:val'), 'single') 
-    topBdr.set(qn('w:sz'), '4') 
-    topBdr.set(qn('w:space'), '1')
-    topBdr.set(qn('w:color'), 'auto')
+    table_header = doc.add_table(rows=1, cols=2)
+    table_header.autofit = True
     
-    pBdr.append(topBdr)
-    pPr.append(pBdr)
+    # Cột 1: Tên trường VÀ LOGO
+    cell_0 = table_header.cell(0, 0)
+    cell_0.width = Cm(9) 
+    p_school = cell_0.paragraphs[0]
+    run_school = p_school.add_run(school_name)
+    style_run(run_school, bold=True, size=12)
+    style_paragraph(p_school, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0))
+    
+    if logo_data:
+        try:
+            p_logo = cell_0.add_paragraph()
+            run_logo = p_logo.add_run()
+            run_logo.add_picture(io.BytesIO(logo_data), width=Cm(2), height=Cm(2))
+            style_paragraph(p_logo, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(0), space_before=Pt(6))
+        except Exception as e:
+            print(f"Lỗi khi chèn logo vào DOCX: {e}")
+    
+    # Cột 2: Thông tin kỳ thi
+    cell_1 = table_header.cell(0, 1)
+    cell_1.width = Cm(10) 
 
-# === HÀM TẠO FOOTER (V16) ===
+    p_exam = cell_1.paragraphs[0]
+    run_exam = p_exam.add_run(exam_name)
+    style_run(run_exam, bold=True, size=12) 
+    style_paragraph(p_exam, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0)) 
+    
+    p_class = cell_1.add_paragraph()
+    run_class = p_class.add_run(f"LỚP: {class_name}")
+    style_run(run_class, bold=True, size=12) 
+    style_paragraph(p_class, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0)) 
+    
+    p_subject = cell_1.add_paragraph()
+    run_subject = p_subject.add_run(f"Tên học phần: {subject_name} (Lần {exam_iteration})")
+    style_run(run_subject, bold=False, size=12) 
+    style_paragraph(p_subject, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0)) 
+
+    p_time = cell_1.add_paragraph()
+    run_time = p_time.add_run(f"Thời gian: {exam_time} phút (không kể thời gian phát đề)")
+    style_run(run_time, bold=False, size=12) 
+    style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0)) 
+
+# === (MỚI V26) HÀM NỘI BỘ TẠO KHỐI KÝ TÊN ===
+def _build_signoff(doc, title="Giảng viên tổng hợp đề"):
+    """Hàm nội bộ: Xây dựng khối ký tên (Cần Thơ, ngày...)"""
+    doc.add_paragraph() 
+    
+    p_signer_base = doc.add_paragraph()
+    tab_stops_signer = p_signer_base.paragraph_format.tab_stops
+    tab_stops_signer.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.CENTER)
+    style_paragraph(p_signer_base, line_spacing=1.15, space_after=Pt(0))
+
+    run_date = p_signer_base.add_run("\tCần Thơ, ngày... tháng... năm...\n")
+    style_run(run_date, italic=True)
+    
+    run_signer = p_signer_base.add_run(f"\t{title}\n")
+    style_run(run_signer, bold=True)
+    
+    run_name = p_signer_base.add_run("\t(Ký, ghi rõ họ tên)")
+    style_run(run_name, italic=True)
+
+
+# === HÀM TẠO FOOTER (LOGIC V17) ===
 def create_footer(doc, total_questions):
     section = doc.sections[0]
     footer = section.footer
     
-    # (V17) Đặt lề footer là 0.5cm
     section.footer_distance = Cm(0.5)
     section.different_first_page_header_footer = False
     
@@ -120,28 +166,49 @@ def create_footer(doc, total_questions):
     run._r.append(fldChar)
 
 
-# === HÀM TẠO ĐÁP ÁN (KHÔNG ĐỔI) ===
-def create_answer_key_doc(answer_key_map, base_name, num_tests):
+# === (SỬA V26) HÀM TẠO ĐÁP ÁN ===
+def create_answer_key_doc(answer_key_map, base_name, num_tests, header_data, logo_data=None):
     doc = Document()
-    doc.add_heading("NỘI DUNG ĐÁP ÁN", 0).alignment = WD_ALIGN_PARAGRAPH.CENTER
-    doc.add_paragraph() 
+    
+    # 1. Đặt lề (Giống file đề)
+    section = doc.sections[0]
+    section.left_margin = Cm(1)
+    section.right_margin = Cm(1)
+    section.top_margin = Cm(1)
+    section.bottom_margin = Cm(1)
+
+    # 2. (SỬA V26) Gọi hàm nội bộ tạo Header
+    _build_header(doc, header_data, logo_data)
+    
+    # 3. Thêm tiêu đề "NỘI DUNG ĐÁP ÁN"
+    p_title = doc.add_paragraph()
+    run_title = p_title.add_run("NỘI DUNG ĐÁP ÁN")
+    style_run(run_title, bold=True, size=13)
+    style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(10), space_before=Pt(6))
+
+    # 4. Tạo Bảng đáp án
     num_questions = 0
     if num_tests > 0 and len(answer_key_map) > 0:
         first_test_code = list(answer_key_map.keys())[0]
         num_questions = len(answer_key_map[first_test_code])
     
+    # (SỬA V26) Chia bảng theo mẫu (60 câu / 2 cột = 30 dòng)
     rows_per_col = (num_questions + 1) // 2 
-    num_cols = (num_tests + 1) * 2
+    num_cols = (num_tests + 1) * 2 # (Đề\câu + 4 đề) * 2
+    
     table = doc.add_table(rows=rows_per_col + 1, cols=num_cols) 
     table.style = 'Table Grid'
     table.autofit = True
     header_cells = table.rows[0].cells
+    
+    # Tạo Header Bảng
     for i in range(2): 
         col_offset = i * (num_tests + 1)
         header_cells[col_offset].text = 'Đề\\câu'
         for j in range(num_tests):
             header_cells[col_offset + j + 1].text = f"{base_name}{j+1:02d}"
 
+    # Điền Bảng
     for row in range(rows_per_col):
         for col_group in range(2): 
             col_offset = col_group * (num_tests + 1)
@@ -153,24 +220,28 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests):
                 if test_code in answer_key_map and len(answer_key_map[test_code]) > (question_num - 1):
                     answer = answer_key_map[test_code][question_num - 1]
                     table.cell(row + 1, col_offset + test_idx + 1).text = answer
+    
+    # 5. Thêm "HẾT"
+    p_het = doc.add_paragraph()
+    run_het = p_het.add_run("HẾT")
+    style_run(run_het, bold=True, size=13)
+    style_paragraph(p_het, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(6), space_before=Pt(6))
+    
+    # 6. (SỬA V26) Gọi hàm nội bộ tạo khối Ký tên
+    _build_signoff(doc, title="Giảng viên tổng hợp đề-đáp án")
+    
+    # 7. (SỬA V26) Gọi hàm tạo Footer
+    create_footer(doc, num_questions)
+    
     doc_buffer = io.BytesIO()
     doc.save(doc_buffer)
     doc_buffer.seek(0)
     return doc_buffer
 
-# === (SỬA V21) HÀM CHÍNH TẠO FILE ZIP ===
-# Thêm 'logo_data' làm tham số
+# === HÀM CHÍNH TẠO FILE ZIP (SỬA V26) ===
 def build_mixed_test_zip(groups, num_tests, base_name, header_data, logo_data=None):
     
     question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
-    
-    school_name = header_data.get('school_name', '').upper()
-    exam_name = header_data.get('exam_name', '').upper()
-    class_name = header_data.get('class_name', '').upper()
-    subject_name = header_data.get('subject_name', '')
-    exam_iteration = header_data.get('exam_iteration', '1')
-    exam_time = header_data.get('exam_time', '90')
-    allow_documents = header_data.get('allow_documents', False)
     
     answer_key_map = {}
             
@@ -189,60 +260,11 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data, logo_data=No
             section.top_margin = Cm(1)
             section.bottom_margin = Cm(1)
             
-            # --- TẠO HEADER (SỬA V21) ---
-            table_header = doc.add_table(rows=1, cols=2)
-            table_header.autofit = True
+            # (SỬA V26) 1. Gọi hàm nội bộ tạo Header
+            _build_header(doc, header_data, logo_data)
             
-            # Cột 1: Tên trường VÀ LOGO
-            cell_0 = table_header.cell(0, 0)
-            cell_0.width = Cm(9) 
-            p_school = cell_0.paragraphs[0]
-            run_school = p_school.add_run(school_name)
-            style_run(run_school, bold=True, size=12)
-            style_paragraph(p_school, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0))
-            
-            # (MỚI V21) THÊM LOGO VÀO CỘT 1
-            if logo_data:
-                try:
-                    p_logo = cell_0.add_paragraph()
-                    run_logo = p_logo.add_run()
-                    # Chèn logo từ stream (BytesIO)
-                    run_logo.add_picture(io.BytesIO(logo_data), width=Cm(2), height=Cm(2))
-                    # Căn giữa logo
-                    style_paragraph(p_logo, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(0), space_before=Pt(6))
-                except Exception as e:
-                    print(f"Lỗi khi chèn logo vào DOCX: {e}")
-                    # Nếu lỗi, vẫn tiếp tục tạo file word
-            
-            
-            # Cột 2: Thông tin kỳ thi (Không đổi)
-            cell_1 = table_header.cell(0, 1)
-            cell_1.width = Cm(10) 
-
-            p_exam = cell_1.paragraphs[0]
-            run_exam = p_exam.add_run(exam_name)
-            style_run(run_exam, bold=True, size=12) 
-            style_paragraph(p_exam, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0)) 
-            
-            p_class = cell_1.add_paragraph()
-            run_class = p_class.add_run(f"LỚP: {class_name}")
-            style_run(run_class, bold=True, size=12) 
-            style_paragraph(p_class, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0)) 
-            
-            p_subject = cell_1.add_paragraph()
-            run_subject = p_subject.add_run(f"Tên học phần: {subject_name} (Lần {exam_iteration})")
-            style_run(run_subject, bold=False, size=12) 
-            style_paragraph(p_subject, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0)) 
-
-            p_time = cell_1.add_paragraph()
-            run_time = p_time.add_run(f"Thời gian: {exam_time} phút (không kể thời gian phát đề)")
-            style_run(run_time, bold=False, size=12) 
-            style_paragraph(p_time, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0)) 
-
-            # --- (FIX V16 - NGẮT TRANG AN TOÀN) ---
-            
-            # 1. TẠO "ĐỀ SỐ"
-            doc_text = "(HSSV không được sử dụng tài liệu)" if not allow_documents else "(HSSV được sử dụng tài liệu)"
+            # 2. TẠO "ĐỀ SỐ"
+            doc_text = "(HSSV không được sử dụng tài liệu)" if not header_data.get('allow_documents', False) else "(HSSV được sử dụng tài liệu)"
             p_de = doc.add_paragraph()
             run_de = p_de.add_run(f"ĐỀ SỐ: {test_code} ")
             style_run(run_de, bold=True, size=13)
@@ -250,15 +272,16 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data, logo_data=No
             style_run(run_doc, bold=False, size=13)
             style_paragraph(p_de, line_spacing=1.15, space_after=Pt(0), keep_with_next=False, space_before=Pt(6))
 
-            # 2. TẠO "NỘI DUNG ĐỀ THI"
+            # 3. TẠO "NỘI DUNG ĐỀ THI"
             p_title = doc.add_paragraph()
             run_title = p_title.add_run("NỘI DUNG ĐỀ THI")
             style_run(run_title, bold=True, size=13)
-            style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(0), space_before=0, keep_with_next=False, page_break_before=False)
+            style_paragraph(p_title, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1.15, space_after=Pt(10), space_before=Pt(0), keep_with_next=False, page_break_before=False)
             
             question_counter = 1
             sorted_group_tags = sorted(groups.keys())
             
+            # 4. TẠO CÂU HỎI (Loop)
             for tag in sorted_group_tags:
                 question_list = groups[tag]
                 
@@ -270,7 +293,6 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data, logo_data=No
                     match = question_regex.match(original_text)
                     clean_question_text = original_text.replace(match.group(0), "").strip() if match else original_text.strip()
                     
-                    # 3. TẠO "CÂU X"
                     p_q = doc.add_paragraph()
                     style_paragraph(p_q, align=WD_ALIGN_PARAGRAPH.JUSTIFY, line_spacing=1.15, space_after=Pt(0), page_break_before=False, keep_with_next=True)
                     
@@ -290,7 +312,6 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data, logo_data=No
                     answer_prefixes = ['A', 'B', 'C', 'D']
                     found_correct_answer = False 
                     
-                    # 4. TẠO BẢNG ĐÁP ÁN (Đã chuẩn)
                     table_ans = doc.add_table(rows=2, cols=2)
                     table_ans.autofit = True
                     table_ans.alignment = WD_TABLE_ALIGNMENT.CENTER 
@@ -319,24 +340,10 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data, logo_data=No
                     if not found_correct_answer:
                         answer_key_map[test_code].append('?') 
 
-            # TẠO KHỐI KÝ TÊN (Đã chuẩn)
-            doc.add_paragraph() 
+            # 5. (SỬA V26) Gọi hàm nội bộ tạo khối Ký tên
+            _build_signoff(doc, title="Giảng viên tổng hợp đề")
             
-            p_signer_base = doc.add_paragraph()
-            tab_stops_signer = p_signer_base.paragraph_format.tab_stops
-            tab_stops_signer.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.CENTER)
-            style_paragraph(p_signer_base, line_spacing=1.15, space_after=Pt(0))
-
-            run_date = p_signer_base.add_run("\tCần Thơ, ngày... tháng... năm...\n")
-            style_run(run_date, italic=True)
-            
-            run_signer = p_signer_base.add_run("\tGiảng viên tổng hợp đề\n")
-            style_run(run_signer, bold=True)
-            
-            run_name = p_signer_base.add_run("\t(Ký, ghi rõ họ tên)")
-            style_run(run_name, italic=True)
-            
-            # TẠO FOOTER (Đã chuẩn V17)
+            # 6. (SỬA V26) Gọi hàm tạo Footer
             create_footer(doc, question_counter - 1)
 
             doc_buffer = io.BytesIO()
@@ -346,7 +353,8 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data, logo_data=No
             file_name = f"Ma_de_{test_code}.docx"
             zip_file.writestr(file_name, doc_buffer.read())
 
-        answer_key_buffer = create_answer_key_doc(answer_key_map, base_name, num_tests)
+        # 7. (SỬA V26) Gọi hàm tạo tệp đáp án (đã sửa)
+        answer_key_buffer = create_answer_key_doc(answer_key_map, base_name, num_tests, header_data, logo_data)
         zip_file.writestr(f"Dap_an_Tong_hop_{base_name}.docx", answer_key_buffer.read())
 
     zip_buffer.seek(0)
