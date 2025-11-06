@@ -17,22 +17,14 @@ async function getSession(supabase) {
     return session;
 }
 
-// === (MỚI V21) HÀM TẢI LOGO LÊN SUPABASE STORAGE ===
-/**
- * Tải logo tùy chỉnh của người dùng lên Supabase Storage
- * @param {object} supabase - Đối tượng Supabase client
- * @param {File} file - Tệp logo
- * @param {HTMLElement} msgEl - Element hiển thị thông báo
- * @param {HTMLElement} btnEl - Nút bấm
- * @param {HTMLElement} spinnerEl - Spinner loading
- */
+// === (SỬA LỖI V22) HÀM TẢI LOGO LÊN SUPABASE STORAGE ===
 export async function handleLogoUpload(supabase, file, msgEl, btnEl, spinnerEl) {
     const session = await getSession(supabase);
     if (!session) return;
 
     const userId = session.user.id;
-    // (SỬA V21.1) Tên tệp sẽ là ID của user (ví dụ: logos/USER_ID)
-    const filePath = `logos/${userId}`; 
+    // (SỬA V22) Tên tệp PHẢI LÀ userId, KHÔNG CÓ "logos/"
+    const filePath = `${userId}`; 
 
     showMessage(msgEl, 'Đang tải logo lên...', false);
     btnEl.disabled = true;
