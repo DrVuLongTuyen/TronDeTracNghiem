@@ -18,6 +18,18 @@ body {
     max-width: 600px;
     box-sizing: border-box;
 }
+
+/* (MỚI V21) Thêm định dạng card chung */
+.card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+/* (MỚI V21) Thêm :first-child để bỏ viền cho card đầu tiên (nếu muốn) */
+/* .card:first-child { border: none; padding: 0; margin: 0; } */
+
+
 .header {
     display: flex;
     justify-content: space-between;
@@ -72,7 +84,7 @@ button:disabled {
 #logout-btn:hover {
     background-color: #c82333;
 }
-#auth-message, #upload-message, #mix-message { /* (Sửa) Thêm mix-message */
+#auth-message, #upload-message, #mix-message, #logo-message { /* (SỬA V21) Thêm logo-message */
     margin-top: 15px;
     font-size: 14px;
     word-wrap: break-word;
@@ -110,13 +122,26 @@ button:disabled {
 .form-group {
     margin-bottom: 15px;
 }
-
 .form-group label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
     color: #333;
 }
+/* (MỚI V21) Thêm style cho nút radio */
+.form-group-radio {
+    margin-bottom: 10px;
+}
+.form-group-radio label {
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+}
+.form-group-radio input[type="radio"] {
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
 
 .form-group input[type="number"],
 .form-group input[type="text"] {
@@ -195,9 +220,7 @@ select {
 #header-info-section {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
+    /* (SỬA V21) Xóa padding/margin vì đã có .card */
 }
 
 #header-info-section label {
