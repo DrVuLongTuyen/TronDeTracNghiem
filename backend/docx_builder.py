@@ -12,10 +12,10 @@ from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 import re 
 
-# (MỚI V26) Import từ file utils
+# Import từ file utils (Không đổi)
 from docx_utils import style_run, style_paragraph, set_paragraph_border
 
-# === (MỚI V26) HÀM NỘI BỘ TẠO HEADER ===
+# === (SỬA V27) HÀM NỘI BỘ TẠO HEADER ===
 def _build_header(doc, header_data, logo_data=None):
     """Hàm nội bộ: Xây dựng Header (Tên trường, Logo, Thông tin thi)"""
     school_name = header_data.get('school_name', '').upper()
@@ -31,6 +31,9 @@ def _build_header(doc, header_data, logo_data=None):
     # Cột 1: Tên trường VÀ LOGO
     cell_0 = table_header.cell(0, 0)
     cell_0.width = Cm(9) 
+    # (MỚI V27) Thêm căn giữa theo chiều dọc
+    cell_0.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+    
     p_school = cell_0.paragraphs[0]
     run_school = p_school.add_run(school_name)
     style_run(run_school, bold=True, size=12)
@@ -48,6 +51,8 @@ def _build_header(doc, header_data, logo_data=None):
     # Cột 2: Thông tin kỳ thi
     cell_1 = table_header.cell(0, 1)
     cell_1.width = Cm(10) 
+    # (MỚI V27) Thêm căn giữa theo chiều dọc
+    cell_1.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
 
     p_exam = cell_1.paragraphs[0]
     run_exam = p_exam.add_run(exam_name)
@@ -71,7 +76,6 @@ def _build_header(doc, header_data, logo_data=None):
 
 # === (MỚI V26) HÀM NỘI BỘ TẠO KHỐI KÝ TÊN ===
 def _build_signoff(doc, title="Giảng viên tổng hợp đề"):
-    """Hàm nội bộ: Xây dựng khối ký tên (Cần Thơ, ngày...)"""
     doc.add_paragraph() 
     
     p_signer_base = doc.add_paragraph()
@@ -192,23 +196,20 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests, header_data, log
         first_test_code = list(answer_key_map.keys())[0]
         num_questions = len(answer_key_map[first_test_code])
     
-    # (SỬA V26) Chia bảng theo mẫu (60 câu / 2 cột = 30 dòng)
     rows_per_col = (num_questions + 1) // 2 
-    num_cols = (num_tests + 1) * 2 # (Đề\câu + 4 đề) * 2
+    num_cols = (num_tests + 1) * 2 
     
     table = doc.add_table(rows=rows_per_col + 1, cols=num_cols) 
     table.style = 'Table Grid'
     table.autofit = True
     header_cells = table.rows[0].cells
     
-    # Tạo Header Bảng
     for i in range(2): 
         col_offset = i * (num_tests + 1)
         header_cells[col_offset].text = 'Đề\\câu'
         for j in range(num_tests):
             header_cells[col_offset + j + 1].text = f"{base_name}{j+1:02d}"
 
-    # Điền Bảng
     for row in range(rows_per_col):
         for col_group in range(2): 
             col_offset = col_group * (num_tests + 1)
