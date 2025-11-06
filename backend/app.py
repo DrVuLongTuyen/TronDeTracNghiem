@@ -39,8 +39,8 @@ except Exception as e:
 def home():
     if DATABASE_ERROR:
         return f"API ĐANG BỊ LỖI KẾT NỐI CSDL: {DATABASE_ERROR}", 500
-    # (FIX V24) Cập nhật phiên bản
-    return "Xin chào, API Backend của TronDeTN (Phiên bản V24) đang hoạt động!"
+    # (FIX V25) Cập nhật phiên bản
+    return "Xin chào, API Backend của TronDeTN (Phiên bản V25) đang hoạt động!"
 
 @app.route('/wake', methods=['GET'])
 def handle_wake():
@@ -65,6 +65,26 @@ def get_user_id_from_token(request):
     jwt_token = auth_header.split(' ')[1]
     user_id = supabase.auth.get_user(jwt_token).user.id
     return user_id
+
+# === (MỚI GĐ 5.2) API LẤY KHO CÂU HỎI ===
+@app.route('/questions', methods=['GET'])
+def handle_get_questions():
+    try:
+        user_id = get_user_id_from_token(request)
+        
+        # Chỉ lấy 2 cột cần thiết, sắp xếp theo group_tag
+        response = supabase.table('question_banks') \
+                           .select('group_tag', 'question_text') \
+                           .eq('user_id', user_id) \
+                           .order('group_tag') \
+                           .execute()
+                           
+        return jsonify(response.data), 200
+        
+    except Exception as e:
+        print(f"Lỗi trong /questions: {e}")
+        return jsonify({"error": f"Lỗi máy chủ nội bộ: {e}"}), 500
+# === KẾT THÚC GĐ 5.2 ===
 
 @app.route('/upload', methods=['POST'])
 def handle_upload():
@@ -125,7 +145,7 @@ def handle_mix():
         
         if logo_preference == "custom":
             try:
-                # (FIX V24) Xóa "logos/" khỏi đường dẫn
+                # (FIX V24) Xóa "logos/"
                 logo_data = supabase.storage.from_('logos').download(f'{user_id}')
                 print(f"Đã tìm thấy logo tùy chỉnh cho {user_id}.")
             except Exception as e:
