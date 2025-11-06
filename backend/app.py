@@ -7,9 +7,11 @@ from flask import Flask, request, jsonify, send_file, make_response
 from flask_cors import CORS
 from supabase import create_client, Client 
 
+# (FIX V24) Lấy đường dẫn tuyệt đối của thư mục script
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_LOGO_PATH = os.path.join(SCRIPT_DIR, 'logo_default.png')
+
 # === (FIX V23) XÓA BỎ IMPORT GÂY NẶNG MÁY ===
-# XÓA: from docx_parser import parse_test_document
-# XÓA: from docx_builder import build_mixed_test_zip
 # Chúng ta sẽ import chúng BÊN TRONG hàm.
 
 # --- Cấu hình ---
@@ -17,7 +19,6 @@ app = Flask(__name__)
 CORS(app, expose_headers=['Content-Disposition'])
 
 # === (FIX V23) Quay lại logic kết nối V21 ===
-# (Chúng ta giả định Key đã đúng như bạn nói)
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 supabase: Client = None 
@@ -38,7 +39,8 @@ except Exception as e:
 def home():
     if DATABASE_ERROR:
         return f"API ĐANG BỊ LỖI KẾT NỐI CSDL: {DATABASE_ERROR}", 500
-    return "Xin chào, API Backend của TronDeTN (Phiên bản V23) đang hoạt động!"
+    # (FIX V24) Cập nhật phiên bản
+    return "Xin chào, API Backend của TronDeTN (Phiên bản V24) đang hoạt động!"
 
 @app.route('/wake', methods=['GET'])
 def handle_wake():
@@ -123,15 +125,17 @@ def handle_mix():
         
         if logo_preference == "custom":
             try:
-                logo_data = supabase.storage.from_('logos').download(f'logos/{user_id}')
+                # (FIX V24) Xóa "logos/" khỏi đường dẫn
+                logo_data = supabase.storage.from_('logos').download(f'{user_id}')
                 print(f"Đã tìm thấy logo tùy chỉnh cho {user_id}.")
             except Exception as e:
                 print(f"Không tìm thấy logo tùy chỉnh cho {user_id}. Dùng mặc định. Lỗi: {e}")
                 try:
-                    with open('backend/logo_default.png', 'rb') as f:
+                    # (FIX V24) Dùng đường dẫn tuyệt đối
+                    with open(DEFAULT_LOGO_PATH, 'rb') as f:
                         logo_data = f.read()
                 except Exception as e_file:
-                    print(f"LỖI NGHIÊM TRỌNG: Không đọc được logo_default.png. Bỏ qua logo. Lỗi: {e_file}")
+                    print(f"LỖI NGHIÊM TRỌNG: Không đọc được {DEFAULT_LOGO_PATH}. Bỏ qua logo. Lỗi: {e_file}")
                     logo_data = None
         
         try:
