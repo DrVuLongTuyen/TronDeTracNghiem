@@ -21,8 +21,8 @@
         </div>
         <p>Xin chào, <span id="user-email"></span>!</p>
 
-        <div id="upload-section">
-            <h2>Tải lên đề gốc (.docx)</h2>
+        <div id="upload-section" class="card">
+            <h2>1. Tải lên đề gốc (.docx)</h2>
 
             <button id="clear-db-btn" class="button-danger">Xóa toàn bộ kho câu hỏi cũ</button>
             <p style="font-size: 14px; color: #555;"><i>(Lưu ý: Chỉ nhấn nút này khi bạn muốn upload một bộ đề MỚI HOÀN TOÀN.)</i></p>
@@ -36,8 +36,8 @@
             <p id="upload-message"></p>
         </div>
 
-        <div id="header-info-section">
-            <h2 style="color: #007bff;">Thông tin Tiêu đề Đề thi (Tùy chọn)</h2>
+        <div id="header-info-section" class="card">
+            <h2 style="color: #007bff;">2. Thông tin Tiêu đề Đề thi</h2>
             <p style="font-size: 14px; color: #555;"><i>(Điền các thông tin này để tệp .docx đầu ra có tiêu đề giống như mẫu)</i></p>
             
             <div class="form-group">
@@ -74,10 +74,33 @@
             </div>
         </div>
 
+        <div class="card">
+            <h2>3. Tùy chỉnh Logo (2cm x 2cm)</h2>
+            
+            <div class="form-group-radio">
+                <input type="radio" name="logo_pref" id="logo_none" value="none">
+                <label for="logo_none">Bỏ trống (Không dùng logo)</label>
+            </div>
+            
+            <div class="form-group-radio">
+                <input type="radio" name="logo_pref" id="logo_custom" value="custom" checked>
+                <label for="logo_custom">Dùng logo (Mặc định / Tùy chỉnh)</label>
+            </div>
+        
+            <div id="logo-upload-area" style="margin-left: 25px; margin-top: 10px;">
+                <p style="font-size: 14px; color: #555;">
+                    <i>(Nếu không tải lên, hệ thống sẽ dùng <strong>logo_default.png</strong>)</i>
+                </p>
+                <input type="file" id="logo-input" accept="image/png, image/jpeg">
+                <button id="upload-logo-btn">Tải lên Logo Tùy chỉnh</button>
+                <div id="logo-spinner" class="spinner" style="display: none;"></div>
+                <p id="logo-message" style="margin-top: 10px;"></p>
+            </div>
+        </div>
         <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
 
-        <div id="mix-section">
-            <h2>TẠO ĐỀ HOÁN VỊ (Tối đa 5 mã đề)</h2>
+        <div id="mix-section" class="card">
+            <h2>4. Tạo đề hoán vị (Tối đa 5 mã đề)</h2>
             
             <div class="form-group">
                 <label for="num-tests-input">Bạn muốn trộn thành bao nhiêu đề (2-5):</label>
@@ -109,4 +132,3 @@
     <script type="module" src="app.js"></script>
 </body>
 </html>
-
