@@ -19,16 +19,12 @@ body {
     box-sizing: border-box;
 }
 
-/* (MỚI V21) Thêm định dạng card chung */
 .card {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
 }
-/* (MỚI V21) Thêm :first-child để bỏ viền cho card đầu tiên (nếu muốn) */
-/* .card:first-child { border: none; padding: 0; margin: 0; } */
-
 
 .header {
     display: flex;
@@ -37,6 +33,15 @@ body {
     border-bottom: 2px solid #eee;
     padding-bottom: 10px;
 }
+
+/* === (MỚI V28) STYLE CHO TÊN NGƯỜI DÙNG === */
+.user-name-style {
+    font-size: 1.5em; /* To gấp rưỡi (so với 1.1em của thẻ <p> cha) */
+    color: #007bff; /* Xanh nước biển */
+    font-weight: bold;
+}
+/* === KẾT THÚC V28 === */
+
 h1 {
     color: #333;
     margin-top: 0;
@@ -48,7 +53,7 @@ h2 {
 }
 input[type="email"],
 input[type="password"] {
-    width: calc(100% - 22px); /* 100% - padding*2 - border*2 */
+    width: calc(100% - 22px); 
     padding: 10px;
     margin: 10px 0;
     border: 1px solid #ddd;
@@ -84,7 +89,7 @@ button:disabled {
 #logout-btn:hover {
     background-color: #c82333;
 }
-#auth-message, #upload-message, #mix-message, #logo-message { /* (SỬA V21) Thêm logo-message */
+#auth-message, #upload-message, #mix-message, #logo-message {
     margin-top: 15px;
     font-size: 14px;
     word-wrap: break-word;
@@ -96,7 +101,6 @@ button:disabled {
     color: red;
 }
 
-/* Spinner animation */
 .spinner {
     border: 4px solid #f3f3f3;
     border-top: 4px solid #3498db;
@@ -113,8 +117,6 @@ button:disabled {
     100% { transform: rotate(360deg); }
 }
 
-/* --- CSS CHO GIAI ĐOẠN 2 --- */
-
 #mix-section {
     margin-top: 20px;
 }
@@ -128,7 +130,6 @@ button:disabled {
     font-weight: bold;
     color: #333;
 }
-/* (MỚI V21) Thêm style cho nút radio */
 .form-group-radio {
     margin-bottom: 10px;
 }
@@ -141,7 +142,6 @@ button:disabled {
     margin-right: 8px;
     vertical-align: middle;
 }
-
 
 .form-group input[type="number"],
 .form-group input[type="text"] {
@@ -180,9 +180,8 @@ button:disabled {
     background-color: #138496;
 }
 
-/* --- CSS CHO NÚT XÓA --- */
 .button-danger {
-    background-color: #dc3545; /* Màu đỏ */
+    background-color: #dc3545; 
     color: white;
     padding: 10px 15px;
     border: none;
@@ -195,7 +194,6 @@ button:disabled {
     background-color: #c82333;
 }
 
-/* --- CSS CHO TRANG ĐĂNG KÝ MỚI --- */
 .form-row {
     display: flex;
     justify-content: space-between;
@@ -216,11 +214,9 @@ select {
     font-size: 16px;
 }
 
-/* --- CSS CHO KHUNG THÔNG TIN HEADER --- */
 #header-info-section {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
-    /* (SỬA V21) Xóa padding/margin vì đã có .card */
 }
 
 #header-info-section label {
@@ -230,7 +226,7 @@ select {
 
 #header-info-section input[type="text"],
 #header-info-section input[type="number"] {
-    width: calc(100% - 22px); /* 100% - padding*2 - border*2 */
+    width: calc(100% - 22px); 
     padding: 10px;
     margin-top: 5px;
     border: 1px solid #ddd;
@@ -242,21 +238,37 @@ select {
     margin-right: 5px;
 }
 
-/* --- CSS CHO CHECKBOX LỚN --- */
 .large-checkbox {
-    transform: scale(2); /* Phóng to 2x */
+    transform: scale(2);
     margin-left: 10px;
-    vertical-align: middle; /* Căn giữa với dòng chữ */
-    width: auto !important; /* Ghi đè style input[type="file"] */
+    vertical-align: middle;
+    width: auto !important;
     cursor: pointer;
 }
 
-/* --- CSS CHO LOGO --- */
 .logo-image {
     display: block;
-    width: 120px; /* Kích thước logo */
+    width: 120px;
     height: auto;
     margin-left: auto;
     margin-right: auto;
     margin-bottom: 10px;
+}
+
+/* (V22) CSS cho danh sách câu hỏi */
+#question-list {
+    list-style-type: none;
+    padding-left: 0;
+    font-size: 14px;
+}
+#question-list li {
+    padding: 8px;
+    border-bottom: 1px dashed #eee;
+}
+#question-list li:last-child {
+    border-bottom: none;
+}
+#question-list li strong {
+    color: #007bff;
+    margin-right: 5px;
 }
