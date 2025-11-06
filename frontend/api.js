@@ -1,48 +1,82 @@
-// Tệp này chứa các hàm gọi API Backend (trên Render)
+// Tệp này chứa các hàm gọi API Backend (trên Render) và Supabase Storage
 import { API_BASE_URL } from './constants.js';
 import { showMessage } from './ui.js';
 
 /**
  * Lấy session token an toàn
  * @param {object} supabase - Đối tượng Supabase client
- * @returns {string|null} Access token
+ * @returns {object|null} Toàn bộ đối tượng session
  */
-async function getSessionToken(supabase) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+async function getSession(supabase) {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error || !session) {
         alert('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
         window.location.href = 'index.html';
         return null;
     }
-    return session.access_token;
+    return session;
 }
 
-// === (YÊU CẦU 15B) HÀM ĐÁNH THỨC MÁY CHỦ ===
-let isServerAwake = false; // Biến cờ để chỉ đánh thức 1 lần
-
+// === (MỚI V21) HÀM TẢI LOGO LÊN SUPABASE STORAGE ===
 /**
- * Đánh thức Render (Backend) và Supabase (Database)
- * @param {HTMLElement} msgEl - Element để hiển thị thông báo "Đang đánh thức..."
+ * Tải logo tùy chỉnh của người dùng lên Supabase Storage
+ * @param {object} supabase - Đối tượng Supabase client
+ * @param {File} file - Tệp logo
+ * @param {HTMLElement} msgEl - Element hiển thị thông báo
+ * @param {HTMLElement} btnEl - Nút bấm
+ * @param {HTMLElement} spinnerEl - Spinner loading
  */
+export async function handleLogoUpload(supabase, file, msgEl, btnEl, spinnerEl) {
+    const session = await getSession(supabase);
+    if (!session) return;
+
+    // Lấy user ID để làm tên tệp, ví dụ: logos/USER_ID.png
+    // Điều này đảm bảo mỗi user chỉ có 1 logo
+    const userId = session.user.id;
+    const fileExt = file.name.split('.').pop();
+    const filePath = `logos/${userId}.${fileExt}`;
+
+    showMessage(msgEl, 'Đang tải logo lên...', false);
+    btnEl.disabled = true;
+    spinnerEl.style.display = 'inline-block';
+
+    try {
+        // Tải lên Supabase Storage
+        const { data, error } = await supabase
+            .storage
+            .from('logos') // Tên Bucket
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: true // Ghi đè nếu tệp đã tồn tại
+            });
+
+        if (error) throw error;
+
+        showMessage(msgEl, 'Tải logo lên thành công!', false);
+        document.getElementById('logo-input').value = ''; // Xóa input
+
+    } catch (error) {
+        showMessage(msgEl, `Lỗi tải logo: ${error.message}`, true);
+    } finally {
+        btnEl.disabled = false;
+        spinnerEl.style.display = 'none';
+    }
+}
+
+
+// === (YÊU CẦU 15B) HÀM ĐÁNH THỨC MÁY CHỦ ===
+let isServerAwake = false; 
+
 async function wakeUpServer(msgEl) {
     if (isServerAwake) {
-        return true; // Máy chủ đã thức, bỏ qua
+        return true; 
     }
-
     showMessage(msgEl, 'Đang đánh thức máy chủ... Việc này có thể mất 1-2 phút...', false);
-    
     try {
-        const response = await fetch(`${API_BASE_URL}/wake`, {
-            method: 'GET',
-            // Đặt timeout (ví dụ 3 phút = 180000 ms)
-            // Lưu ý: fetch API gốc không hỗ trợ timeout, nhưng trình duyệt thường có timeout riêng
-        });
-        
-        // Không quan trọng kết quả 200 hay 503, chỉ cần nó trả lời là thành công
-        isServerAwake = true; // Đánh dấu đã thức
+        await fetch(`${API_BASE_URL}/wake`, { method: 'GET' });
+        isServerAwake = true; 
         showMessage(msgEl, 'Máy chủ đã thức! Đang xử lý yêu cầu của bạn...', false);
         return true;
-
     } catch (error) {
         showMessage(msgEl, `Lỗi đánh thức máy chủ: ${error.message}. Vui lòng tải lại trang và thử lại.`, true);
         return false;
@@ -55,7 +89,6 @@ async function wakeUpServer(msgEl) {
  * Xử lý Tải tệp .docx lên
  */
 export async function handleFileUpload(supabase, file, msgEl, btnEl, spinnerEl) {
-    // (FIX 15B) Đánh thức trước
     btnEl.disabled = true;
     spinnerEl.style.display = 'inline-block';
     const awake = await wakeUpServer(msgEl);
@@ -64,10 +97,10 @@ export async function handleFileUpload(supabase, file, msgEl, btnEl, spinnerEl) 
         spinnerEl.style.display = 'none';
         return;
     }
-    // Kết thúc đánh thức
-
-    const token = await getSessionToken(supabase);
-    if (!token) return;
+    
+    const session = await getSession(supabase);
+    if (!session) return;
+    const token = session.access_token;
 
     const formData = new FormData();
     formData.append('file', file);
@@ -102,17 +135,16 @@ export async function handleFileUpload(supabase, file, msgEl, btnEl, spinnerEl) 
  * Xử lý Xóa kho câu hỏi
  */
 export async function handleClearDatabase(supabase, msgEl, btnEl) {
-    // (FIX 15B) Đánh thức trước
     btnEl.disabled = true;
     const awake = await wakeUpServer(msgEl);
     if (!awake) {
         btnEl.disabled = false;
         return;
     }
-    // Kết thúc đánh thức
-
-    const token = await getSessionToken(supabase);
-    if (!token) return;
+    
+    const session = await getSession(supabase);
+    if (!session) return;
+    const token = session.access_token;
 
     showMessage(msgEl, 'Máy chủ đã thức! Đang xóa dữ liệu cũ...', false);
 
@@ -141,7 +173,6 @@ export async function handleClearDatabase(supabase, msgEl, btnEl) {
  * Xử lý Trộn đề
  */
 export async function handleMixRequest(supabase, msgEl, btnEl, downloadBtnEl) {
-    // (FIX 15B) Đánh thức trước
     btnEl.disabled = true;
     downloadBtnEl.style.display = 'none';
     const awake = await wakeUpServer(msgEl);
@@ -149,14 +180,15 @@ export async function handleMixRequest(supabase, msgEl, btnEl, downloadBtnEl) {
         btnEl.disabled = false;
         return;
     }
-    // Kết thúc đánh thức
 
-    // 1. Lấy thông tin Giai đoạn 2 (Trộn đề)
+    // === (SỬA LỖI V21) THÊM LOGIC LẤY LỰA CHỌN LOGO ===
+    const logoPreference = document.querySelector('input[name="logo_pref"]:checked').value;
+    // === KẾT THÚC SỬA LỖI V21 ===
+
     const numTests = document.getElementById('num-tests-input').value;
     const baseNameEl = document.getElementById('base-name-input');
     const baseName = baseNameEl.value.toUpperCase() || baseNameEl.placeholder;
 
-    // 2. Lấy 7 thông tin Giai đoạn 3 (Header)
     const schoolNameEl = document.getElementById('school-name');
     const examNameEl = document.getElementById('exam-name');
     const classNameEl = document.getElementById('class-name');
@@ -172,9 +204,9 @@ export async function handleMixRequest(supabase, msgEl, btnEl, downloadBtnEl) {
         allow_documents: document.getElementById('allow-documents').checked
     };
 
-    // 3. Lấy token
-    const token = await getSessionToken(supabase);
-    if (!token) return;
+    const session = await getSession(supabase);
+    if (!session) return;
+    const token = session.access_token;
 
     showMessage(msgEl, 'Máy chủ đã thức! Đang trộn đề...', false);
 
@@ -185,10 +217,12 @@ export async function handleMixRequest(supabase, msgEl, btnEl, downloadBtnEl) {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
+            // (SỬA LỖI V21) Gửi thêm logo_preference
             body: JSON.stringify({
                 num_tests: numTests,
                 base_name: baseName,
-                header_data: headerData
+                header_data: headerData,
+                logo_preference: logoPreference // Gửi lựa chọn của user
             })
         });
 
