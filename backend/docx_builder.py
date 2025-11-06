@@ -12,66 +12,54 @@ from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 import re 
 
-# === HÀM STYLE CHUNG ===
+# === HÀM STYLE CHUNG (V16) ===
 def style_run(run, bold=False, italic=False, size=13):
     run.font.name = 'Times New Roman'
     run.font.size = Pt(size)
     run.font.bold = bold
     run.font.italic = italic
 
-# === (FIX V16) SỬA LỖI SPACING 2481PT ===
 def style_paragraph(p, align=WD_ALIGN_PARAGRAPH.LEFT, line_spacing=1.15, space_after=Pt(0), page_break_before=False, keep_with_next=False, space_before=Pt(0)):
-    """
-    Sửa lỗi V16:
-    1. Đặt default cho space_after/space_before là Pt(0).
-    2. Gán thẳng giá trị (không bọc Pt() nữa) để tránh lỗi Pt(Pt(x)).
-    """
     p.paragraph_format.alignment = align
     p.paragraph_format.line_spacing = line_spacing
-    p.paragraph_format.space_after = space_after # Gán thẳng, không Pt()
-    p.paragraph_format.space_before = space_before # Gán thẳng, không Pt()
+    p.paragraph_format.space_after = space_after
+    p.paragraph_format.space_before = space_before
     p.paragraph_format.page_break_before = page_break_before 
     p.paragraph_format.keep_with_next = keep_with_next 
     p.paragraph_format.widow_control = False 
 
-# === HÀM TẠO BORDER (QUAY LẠI V2/V3) ===
+# === HÀM TẠO BORDER (V16) ===
 def set_paragraph_border(paragraph):
     pPr = paragraph._p.get_or_add_pPr() 
     pBdr = OxmlElement('w:pBdr')       
     
     topBdr = OxmlElement('w:top')
     topBdr.set(qn('w:val'), 'single') 
-    topBdr.set(qn('w:sz'), '4') # Size (4 = 0.5 pt)       
+    topBdr.set(qn('w:sz'), '4') 
     topBdr.set(qn('w:space'), '1')
     topBdr.set(qn('w:color'), 'auto')
     
     pBdr.append(topBdr)
     pPr.append(pBdr)
 
-# === HÀM TẠO FOOTER (QUAY LẠI V2/V3) ===
+# === HÀM TẠO FOOTER (V16) ===
 def create_footer(doc, total_questions):
     section = doc.sections[0]
     footer = section.footer
     
-    # === (SỬA LỖI V17) ===
-    # Đặt lề footer là 0.5cm (theo hình ảnh mới nhất)
+    # (V17) Đặt lề footer là 0.5cm
     section.footer_distance = Cm(0.5)
-    # === KẾT THÚC SỬA LỖI V17 ===
-    
     section.different_first_page_header_footer = False
     
     for p in footer.paragraphs:
         p.clear()
         
-    # 1. Thêm đường kẻ ngang LÊN TRÊN (p_line)
     p_line = footer.add_paragraph()
     set_paragraph_border(p_line)
     style_paragraph(p_line, space_after=Pt(0), space_before=Pt(0))
 
-    # 2. Thêm bảng 2 cột BÊN DƯỚI đường kẻ
     footer_table = footer.add_table(rows=1, cols=2, width=doc.sections[0].page_width - doc.sections[0].left_margin - doc.sections[0].right_margin)
     
-    # Cột 1: Ghi chú
     cell_0 = footer_table.cell(0, 0)
     p_0 = cell_0.paragraphs[0]
     p_0.alignment = WD_ALIGN_PARAGRAPH.LEFT
@@ -97,7 +85,6 @@ def create_footer(doc, total_questions):
     run.font.size = Pt(11)
     run.font.italic = True
 
-    # Cột 2: Trang
     cell_1 = footer_table.cell(0, 1)
     p_1 = cell_1.paragraphs[0]
     p_1.alignment = WD_ALIGN_PARAGRAPH.RIGHT
@@ -171,8 +158,9 @@ def create_answer_key_doc(answer_key_map, base_name, num_tests):
     doc_buffer.seek(0)
     return doc_buffer
 
-# === (FIX V16) HÀM CHÍNH TẠO FILE ZIP ===
-def build_mixed_test_zip(groups, num_tests, base_name, header_data):
+# === (SỬA V21) HÀM CHÍNH TẠO FILE ZIP ===
+# Thêm 'logo_data' làm tham số
+def build_mixed_test_zip(groups, num_tests, base_name, header_data, logo_data=None):
     
     question_regex = re.compile(r"^(Câu|Question)\s+\d+[\.:]?\s+", re.IGNORECASE)
     
@@ -198,14 +186,14 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             section = doc.sections[0]
             section.left_margin = Cm(1)
             section.right_margin = Cm(1)
-            # (V17) Đã xác nhận Top 1cm
             section.top_margin = Cm(1)
             section.bottom_margin = Cm(1)
             
-            # --- TẠO HEADER (Đã chuẩn) ---
+            # --- TẠO HEADER (SỬA V21) ---
             table_header = doc.add_table(rows=1, cols=2)
             table_header.autofit = True
             
+            # Cột 1: Tên trường VÀ LOGO
             cell_0 = table_header.cell(0, 0)
             cell_0.width = Cm(9) 
             p_school = cell_0.paragraphs[0]
@@ -213,6 +201,21 @@ def build_mixed_test_zip(groups, num_tests, base_name, header_data):
             style_run(run_school, bold=True, size=12)
             style_paragraph(p_school, align=WD_ALIGN_PARAGRAPH.CENTER, line_spacing=1, space_after=Pt(0))
             
+            # (MỚI V21) THÊM LOGO VÀO CỘT 1
+            if logo_data:
+                try:
+                    p_logo = cell_0.add_paragraph()
+                    run_logo = p_logo.add_run()
+                    # Chèn logo từ stream (BytesIO)
+                    run_logo.add_picture(io.BytesIO(logo_data), width=Cm(2), height=Cm(2))
+                    # Căn giữa logo
+                    style_paragraph(p_logo, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=Pt(0), space_before=Pt(6))
+                except Exception as e:
+                    print(f"Lỗi khi chèn logo vào DOCX: {e}")
+                    # Nếu lỗi, vẫn tiếp tục tạo file word
+            
+            
+            # Cột 2: Thông tin kỳ thi (Không đổi)
             cell_1 = table_header.cell(0, 1)
             cell_1.width = Cm(10) 
 
