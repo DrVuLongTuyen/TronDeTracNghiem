@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hướng dẫn sử dụng - Trộn Đề TN</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="icon" href="logo.png" type="image/png">
     <meta property="og:title" content="Trộn Đề Trắc Nghiệm Thông Minh">
     <meta property="og:description" content="Nền tảng tạo đề hoán vị và đáp án tự động. Nhanh chóng, an toàn và miễn phí.">
@@ -12,118 +10,144 @@
     <meta property="og:url" content="https://trondetn.vltuyen.com">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
+    <title>Hướng dẫn sử dụng - Trộn Đề TN</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background-color: #fff; }
+        .container { max-width: 800px; box-shadow: none; border: 1px solid #eee; }
+        h2 { border-bottom: 2px solid #007bff; padding-bottom: 5px; color: #007bff; }
+        h3 { color: #333; }
+        pre {
+            background-color: #f4f4f4;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: "Courier New", Courier, monospace;
+            white-space: pre-wrap; /* Xuống dòng khi cần */
+            font-size: 14px;
+        }
+        .nav-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-decoration: none;
+            color: #007bff;
+        }
+        .nav-link:hover { text-decoration: underline; }
+    </style>
 </head>
 <body>
     <div class="container">
-        <a href="dashboard.html" style="text-decoration: none; margin-bottom: 20px; display: inline-block;">&larr; Quay lại Bảng điều khiển</a>
+        <a href="dashboard.html" class="nav-link">&larr; Quay lại Bảng điều khiển</a>
 
-        <h1>Hướng dẫn sử dụng - Trộn Đề Trắc Nghiệm</h1>
+        <h1 style="text-align: center;">Hướng dẫn sử dụng - Trộn Đề Trắc Nghiệm</h1>
 
-        <h2>Tính năng hiện tại</h2>
+        <h2>1. Các tính năng chính (Phiên bản V21)</h2>
         <ul>
-            <li><strong>Xác thực người dùng:</strong> Đăng ký tài khoản, đăng nhập, và xác thực qua email.</li>
-            <li><strong>Upload Đề Gốc:</strong> Tải lên tệp <code>.docx</code> chứa các câu hỏi trắc nghiệm.</li>
-            <li><strong>Phân tích & Lưu trữ:</strong> Hệ thống tự động đọc và lưu câu hỏi vào cơ sở dữ liệu cá nhân của bạn.</li>
-            <li><strong>Xóa kho:</strong> Xóa toàn bộ câu hỏi cũ để chuẩn bị cho bộ đề mới.</li>
-            <li><strong>Trộn đề:</strong> Tạo ra nhiều mã đề hoán vị (câu hỏi và/hoặc đáp án).</li>
-            <li><strong>Xuất tệp:</strong> Tải về file <code>.zip</code> chứa các tệp đề <code>.docx</code> đã trộn và 1 tệp đáp án tổng hợp.</li>
+            <li><strong>Xác thực Người dùng:</strong> Đăng ký, Đăng nhập, và Tự động quản lý phiên làm việc.</li>
+            <li><strong>Upload Đề gốc:</strong> Tải lên tệp <code>.docx</code> chứa ngân hàng câu hỏi.</li>
+            <li><strong>Phân tích & Lưu trữ:</strong> Hệ thống tự động đọc tệp Word, phân tích câu hỏi/đáp án và lưu vào CSDL Supabase cá nhân của bạn.</li>
+            <li><strong>Hiển thị Kho câu hỏi:</strong> Tự động tải và hiển thị danh sách câu hỏi hiện có trong CSDL của bạn.</li>
+            <li><strong>Quản lý Kho:</strong> Xóa toàn bộ câu hỏi cũ để chuẩn bị cho bộ đề mới.</li>
+            <li><strong>Tùy chỉnh Tiêu đề:</strong> Cho phép nhập Tên trường, Tên kỳ thi, Lớp, v.v. để chèn vào file Word.</li>
+            <li><strong>Tùy chỉnh Logo (MỚI):</strong> Cung cấp 3 tùy chọn:
+                <ol>
+                    <li>Bỏ trống (không chèn logo).</li>
+                    <li>Dùng logo mặc định (<code>logo_default.png</code>).</li>
+                    <li>Tải lên logo tùy chỉnh của riêng bạn (2cm x 2cm, căn giữa).</li>
+                </ol>
+            </li>
+            <li><strong>Trộn đề & Xuất tệp:</strong> Tạo ra nhiều mã đề (tối đa 5) dưới dạng file <code>.zip</code>, bao gồm các tệp <code>.docx</code> (đề thi) và 1 tệp <code>.docx</code> (phiếu đáp án tổng hợp).</li>
+            <li><strong>Đánh thức Máy chủ (MỚI):</strong> Tự động "đánh thức" máy chủ Backend (Render) và CSDL (Supabase) khi bạn thực hiện tác vụ, tránh lỗi "treo" 10 phút.</li>
         </ul>
 
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-
-        <h2>Hướng dẫn sử dụng Ứng dụng Web</h2>
+        <h2>2. Quy trình làm việc</h2>
+        <h3>Bước 1: Đăng nhập (hoặc Đăng ký)</h3>
+        <p>Truy cập trang web, nếu chưa có tài khoản, vui lòng Đăng ký. Bạn sẽ cần xác thực email (kiểm tra hộp thư Spam) trước khi Đăng nhập.</p>
         
-        <h3>1. Đăng ký tài khoản</h3>
-        <ol>
-            <li>Truy cập <a href="https://trondetn.vltuyen.com" target="_blank">https://trondetn.vltuyen.com</a>.</li>
-            <li>Nhấn vào link "Đăng ký ngay".</li>
-            <li>Điền đầy đủ thông tin (Họ, Tên, Ngày sinh, Giới tính, Email, Mật khẩu).
-                <br><strong>Lưu ý quan trọng:</strong> Mật khẩu phải có <strong>độ dài tối thiểu 6 ký tự</strong> và gõ 2 lần phải khớp nhau.
-            </li>
-            <li>Nhấn nút <strong>"Đăng ký"</strong>.</li>
-        </ol>
+        <h3>Bước 2: Tải lên Đề gốc</h3>
+        <p>Tại Khu vực 1, nhấn "Xóa toàn bộ kho câu hỏi cũ" (nếu cần). Sau đó, chọn tệp <code>.docx</code> đã được định dạng (xem mục 3) và nhấn "Tải lên và xử lý".</p>
+        
+        <h3>Bước 3: Xem lại Kho câu hỏi</h3>
+        <p>Sau khi tải lên thành công, danh sách câu hỏi (phía dưới nút Tải lên) sẽ tự động được làm mới. Bạn có thể kiểm tra xem các câu hỏi và thẻ nhóm (tag) đã vào đúng chưa.</p>
 
-        <h3>2. Xác thực Email</h3>
-        <ol>
-            <li>Sau khi đăng ký, hệ thống sẽ gửi một email xác thực đến địa chỉ bạn đã đăng ký.</li>
-            <li>Mở hộp thư của bạn, tìm email từ "Supabase Auth" (có thể ở trong mục Spam/Quảng cáo).</li>
-            <li>Nhấn vào nút <strong>"Confirm your mail"</strong> trong email.</li>
-            <li>Bạn sẽ được chuyển hướng trở lại trang web, xác nhận rằng tài khoản của bạn đã được kích hoạt.</li>
-        </ol>
+        <h3>Bước 4: Tùy chỉnh Tiêu đề & Logo</h3>
+        <p>Điền các thông tin Tên trường, Tên kỳ thi... tại Khu vực 2.</p>
+        <p>Tại Khu vực 3, chọn 1 trong 2 tùy chọn logo. Nếu bạn chọn "Dùng logo...", bạn có thể tải lên tệp <code>.png</code> hoặc <code>.jpg</code> của riêng mình (nếu không tải, hệ thống sẽ dùng <code>logo_default.png</code>).</p>
 
-        <h3>3. Đăng nhập</h3>
-        <p>Sau khi đã xác thực, bạn có thể đăng nhập bằng email và mật khẩu đã tạo.</p>
+        <h3>Bước 5: Trộn đề</h3>
+        <p>Tại Khu vực 4, nhập số lượng đề cần tạo (ví dụ: 4) và Tên tệp tin (ví dụ: VLT).</p>
+        <p>Nhấn "Bắt đầu trộn đề". Lần đầu tiên trong ngày, bạn có thể phải đợi 1-2 phút để máy chủ "Đánh thức". Sau khi trộn xong, nút "Tải về (.zip)" sẽ xuất hiện.</p>
 
-        <h3>4. Quy trình làm việc</h3>
-        <ol>
-            <li><strong>(Nếu cần) Xóa kho cũ:</strong> Nếu bạn muốn làm một bộ đề mới, hãy nhấn nút <strong>"Xóa toàn bộ kho câu hỏi cũ"</strong>.</li>
-            <li><strong>Tải lên đề gốc:</strong> Nhấn <strong>"Chọn tệp"</strong> và chọn tệp <code>.docx</code> đã định dạng (xem bên dưới). Nhấn <strong>"Tải lên và xử lý"</strong>. Đợi đến khi có thông báo "Xử lý thành công...".</li>
-            <li><strong>Điền thông tin Tiêu đề:</strong> Nhập Tên trường, Tên kỳ thi, Lớp, v.v. vào các ô trong biểu mẫu "Thông tin Tiêu đề". (Nếu bỏ trống, hệ thống sẽ dùng giá trị gợi ý).</li>
-            <li><strong>Trộn đề:</strong> Kéo xuống mục "TẠO ĐỀ HOÁN VỊ", nhập số lượng đề bạn muốn và Tên tệp tin (ví dụ: VLT).</li>
-            <li><strong>Tải về:</strong> Nhấn <strong>"Bắt đầu trộn đề"</strong>. Chờ vài giây, nút <strong>"Tải về (.zip)"</strong> sẽ hiện ra. Nhấn vào đó để tải tệp nén chứa các mã đề và đáp án.</li>
-        </ol>
-
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-
-        <h2>Hướng dẫn định dạng tệp Đề Gốc (.docx)</h2>
+        <h2>3. Hướng dẫn Định dạng tệp Đề Gốc (.docx)</h2>
         <p style="color: red; font-weight: bold;">Đây là bước QUAN TRỌNG NHẤT. Để hệ thống có thể đọc hiểu tệp, bạn phải tuân thủ CHÍNH XÁC các quy tắc sau:</p>
 
-        <h3>1. Câu hỏi</h3>
-        <ul>
-            <li>Mỗi câu hỏi phải bắt đầu bằng chữ <code>Câu </code> (có dấu cách) và số thứ tự.</li>
-            <li>Ví dụ: <code>Câu 1.</code>, <code>Câu 2:</code>, <code>Câu 10.</code></li>
-        </ul>
-
-        <h3>2. Đáp án</h3>
-        <ul>
-            <li>Các đáp án phải nằm ngay dưới câu hỏi.</li>
-            <li>Các đáp án phải bắt đầu bằng <code>A.</code>, <code>B.</code>, <code>C.</code>, <code>D.</code> (chữ hoa, có dấu chấm).</li>
-        </ul>
-
-        <h3>3. Đáp án đúng (Rất quan trọng)</h3>
-        <ul>
-            <li>Để đánh dấu đâu là đáp án đúng, bạn <strong>BẮT BUỘC</strong> phải dùng tính năng <strong>Gạch chân (Underline)</strong> của Microsoft Word.</li>
-            <li>Bạn có thể chỉ gạch chân chữ cái đầu (ví dụ: <code>A.</code>) hoặc gạch chân cả dòng đáp án.</li>
-        </ul>
-
-        <h3>4. Thẻ Nhóm (Phân loại câu hỏi)</h3>
-        <p>Hệ thống sử dụng các thẻ đặc biệt (viết trên một dòng riêng) để phân loại các nhóm câu hỏi:</p>
+        <h3>Quy tắc 1: Thẻ Nhóm (Group Tag)</h3>
+        <p>Hệ thống dùng các thẻ đặc biệt (viết trên một dòng riêng) để phân loại các nhóm câu hỏi:</p>
         <ul>
             <li><code>&lt;g0&gt;</code>: <strong>Nhóm không trộn</strong>. (Ví dụ: Các câu hỏi của bài nghe, đọc hiểu).</li>
             <li><code>&lt;g1&gt;</code>: <strong>Nhóm chỉ hoán vị câu hỏi</strong>.</li>
             <li><code>&lt;g2&gt;</code>: <strong>Nhóm chỉ hoán vị đáp án</strong>.</li>
             <li><code>&lt;g3&gt;</code>: <strong>Nhóm hoán vị cả câu hỏi và đáp án</strong> (phổ biến nhất).</li>
         </ul>
+        <p><i>Lưu ý: Nếu bạn không cung cấp thẻ nhóm nào, hệ thống sẽ tự động coi tất cả là <code>&lt;g3&gt;</code>.</i></p>
+
+        <h3>Quy tắc 2: Câu hỏi</h3>
+        <p>Mỗi câu hỏi phải bắt đầu bằng chữ <code>Câu </code> (có dấu cách) và số thứ tự. Câu hỏi có thể kéo dài nhiều dòng.</p>
+        <pre>Câu 1: Trái đất hình gì?</pre>
+        <pre>Câu 2: Bệnh nhân G được bác sĩ khuyên nên thực hiện liệu pháp hóa trị cho bệnh ung thư.
+Tuy nhiên, sau khi tư vấn, bệnh nhân và người thân từ chối...</pre>
+
+
+        <h3>Quy tắc 3: Đáp án</h3>
+        <p>Các đáp án phải nằm ngay dưới câu hỏi và phải bắt đầu bằng <code>A.</code>, <code>B.</code>, <code>C.</code>, <code>D.</code> (chữ hoa, có dấu chấm).</p>
+        <pre>A. Hình tròn
+B. Hình vuông
+C. Hình cầu
+D. Hình tam giác</pre>
+
+        <h3>Quy tắc 4: Đáp án đúng (Rất quan trọng)</h3>
+        <p>Để đánh dấu đâu là đáp án đúng, bạn <strong>BẮT BUỘC</strong> phải dùng tính năng <strong>Gạch chân (Underline)</strong> của Microsoft Word.</p>
+        <p>Bạn có thể chỉ gạch chân chữ cái đầu (ví dụ: <code><u>A.</u></code>) hoặc gạch chân cả dòng đáp án.</p>
+        <pre>A. Hình tròn
+B. Hình vuông
+<u>C. Hình cầu</u>
+D. Hình tam giác</pre>
         
         <h3>Ví dụ tệp .docx hợp lệ:</h3>
-        <div style="background-color: #f4f4f4; border-left: 4px solid #007bff; padding: 10px; margin: 10px 0; font-family: monospace; white-space: pre-wrap;">&lt;g3&gt;
-PHẦN I. Câu trắc nghiệm.
-
+        <pre>
+&lt;g3&gt;
 Câu 1. Bào quan nào sau đây trực tiếp tham gia quá trình tiêu hóa nội bào?
 A. Ribosome.
 B. Nhân.
-<u>C. Lysosome.</u> (Lưu ý: Dòng này được gạch chân trong Word)
+<u>C. Lysosome.</u>
 D. Bộ máy Golgi.
 
 &lt;g1&gt;
 Câu 2. Bào quan nào sau đây là túi chứa sắc tố?
-<u>A. Không bào.</u> (Lưu ý: Dòng này được gạch chân trong Word)
+<u>A. Không bào.</u>
 B. Nhân.
 C. Lysosome.
-</div>
+D. Lục lạp.
+</pre>
 
-        <h2>Xử lý sự cố (Troubleshooting)</h2>
+        <h2>4. Xử lý sự cố (Troubleshooting)</h2>
         <ul>
-            <li><strong>Lỗi: "Lỗi đăng ký..."</strong>: Mật khẩu của bạn có thể dưới 6 ký tự. Vui lòng thử lại với mật khẩu dài hơn.</li>
-            <li><strong>Lỗi: "Lỗi đăng nhập: Invalid API key"</strong>: Lỗi này 99% là do bạn chưa sửa 2 dòng `SUPABASE_URL` và `SUPABASE_ANON_KEY` trong tệp `app.js` trên GitHub.</li>
-            <li><strong>Đăng nhập không được</strong>: Bạn đã nhấn vào link xác thực trong email chưa? Vui lòng kiểm tra email (cả mục Spam).</li>
-            <li><strong>Upload báo lỗi: "Không tìm thấy câu hỏi..."</strong>: Tệp <code>.docx</code> của bạn đã định dạng sai. Vui lòng kiểm tra lại 6 quy tắc ở trên.</li>
-            <li><strong>Upload báo lỗi: "Lỗi kết nối API: Failed to fetch"</strong>: Có thể máy chủ Backend đang tạm nghỉ. Vui lòng đợi 30 giây và nhấn nút "Tải lên" lại.</li>
-            <li><strong>Trộn đề báo lỗi: "Lỗi máy chủ nội bộ..."</strong>: Tệp <code>.docx</code> của bạn có thể bị lỗi định dạng (ví dụ: thiếu gạch chân đáp án). Vui lòng kiểm tra lại tệp gốc hoặc nhấn "Xóa toàn bộ kho câu hỏi cũ" và tải lại.</li>
+            <li><strong>Lỗi: "Treo" 5-10 phút khi nhấn nút?</strong>
+                <br>Đây là lỗi "Crash Loop" (Quá tải RAM hoặc Sai Key) ở phiên bản cũ. Bản V23 đã khắc phục. Nếu vẫn bị, vui lòng kiểm tra lại <strong>Biến Môi trường</strong> (<code>SUPABASE_URL</code>, <code>SUPABASE_KEY</code>) trên Render.
+            </li>
+            
+            <li><strong>Lỗi: "Lỗi tải logo: new row violates row-level security policy"?</strong>
+                <br>Bạn chưa chạy 3 câu lệnh SQL (Chính sách Bảo mật) cho Supabase Storage. Vui lòng xem lại Bước 6a (V22) của chúng ta.
+            </li>
+
+            <li><strong>Lỗi: "Lỗi: Không tìm thấy câu hỏi hợp lệ trong tệp."?</strong>
+                <br>Tệp <code>.docx</code> của bạn đã định dạng sai. Vui lòng kiểm tra lại 4 quy tắc ở mục 3 (Thiếu <code>Câu X:</code>, sai <code>A.</code>, hoặc quên <strong>gạch chân</strong> đáp án đúng).
+            </li>
         </ul>
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-        <a href="dashboard.html" style="text-decoration: none; display: inline-block;">&larr; Quay lại Bảng điều khiển</a>
+        <a href="dashboard.html" class="nav-link">&larr; Quay lại Bảng điều khiển</a>
 
     </div>
 </body>
