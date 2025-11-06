@@ -1,6 +1,6 @@
 // Tệp này chứa các hàm gọi API Backend (trên Render) và Supabase Storage
 import { API_BASE_URL } from './constants.js';
-import { showMessage } from './ui.js';
+import { showMessage, displayQuestions } from './ui.js'; // (SỬA V23) import displayQuestions
 
 /**
  * Lấy session token an toàn
@@ -17,13 +17,39 @@ async function getSession(supabase) {
     return session;
 }
 
-// === (SỬA LỖI V22) HÀM TẢI LOGO LÊN SUPABASE STORAGE ===
+// === (MỚI GĐ 5.2) HÀM LẤY KHO CÂU HỎI ===
+export async function fetchQuestions(supabase) {
+    const session = await getSession(supabase);
+    if (!session) return;
+    
+    const token = session.access_token;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/questions`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const questions = await response.json();
+            displayQuestions(questions); // Gọi hàm UI để hiển thị
+        } else {
+            // Hiển thị lỗi ngay tại danh sách câu hỏi
+            displayQuestions(null); 
+            console.error("Lỗi tải câu hỏi:", response.statusText);
+        }
+    } catch (error) {
+        displayQuestions(null);
+        console.error("Lỗi kết nối khi tải câu hỏi:", error.message);
+    }
+}
+
+// === HÀM TẢI LOGO (V22) ===
 export async function handleLogoUpload(supabase, file, msgEl, btnEl, spinnerEl) {
     const session = await getSession(supabase);
     if (!session) return;
 
     const userId = session.user.id;
-    // (SỬA V22) Tên tệp PHẢI LÀ userId, KHÔNG CÓ "logos/"
     const filePath = `${userId}`; 
 
     showMessage(msgEl, 'Đang tải logo lên...', false);
@@ -33,10 +59,10 @@ export async function handleLogoUpload(supabase, file, msgEl, btnEl, spinnerEl) 
     try {
         const { data, error } = await supabase
             .storage
-            .from('logos') // Tên Bucket
+            .from('logos')
             .upload(filePath, file, {
                 cacheControl: '3600',
-                upsert: true // Ghi đè nếu tệp đã tồn tại
+                upsert: true
             });
 
         if (error) throw error;
@@ -107,6 +133,8 @@ export async function handleFileUpload(supabase, file, msgEl, btnEl, spinnerEl) 
         
         if (response.ok) {
             showMessage(msgEl, `${result.message}. Đã lưu ${result.questions_saved} câu hỏi.`, false);
+            // (MỚI GĐ 5.2) Tải lại danh sách câu hỏi sau khi upload thành công
+            await fetchQuestions(supabase); 
         } else {
             showMessage(msgEl, `Lỗi: ${result.error || 'Lỗi không xác định từ server'}`, true);
         }
@@ -147,6 +175,8 @@ export async function handleClearDatabase(supabase, msgEl, btnEl) {
         
         if (response.ok) {
             showMessage(msgEl, result.message, false);
+            // (MỚI GĐ 5.2) Tải lại danh sách câu hỏi (rỗng)
+            await fetchQuestions(supabase);
         } else {
             showMessage(msgEl, `Lỗi: ${result.error}`, true);
         }
