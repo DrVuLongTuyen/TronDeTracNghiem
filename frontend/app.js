@@ -1,13 +1,10 @@
 // ====== TỆP APP.JS CHÍNH (ĐÃ CHIA NHỎ) ======
-// Tệp này chỉ làm 2 việc: 
-// 1. Khởi tạo Supabase
-// 2. Gán sự kiện (click) cho các nút bấm
-
 import { SUPABASE_URL, SUPABASE_ANON_KEY, createClient } from './constants.js';
 import { showMessage, populateDateOfBirth } from './ui.js';
 import { checkUserSession } from './session.js';
 import { handleLogin, handleSignUp, handleLogout } from './auth.js';
-import { handleFileUpload, handleClearDatabase, handleMixRequest } from './api.js';
+// (MỚI V21) Import thêm handleLogoUpload
+import { handleFileUpload, handleClearDatabase, handleMixRequest, handleLogoUpload } from './api.js';
 
 // --- 1. Khởi tạo Supabase ---
 let supabase;
@@ -31,13 +28,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const authMessage = document.getElementById('auth-message');
     
     if (loginBtn) {
-        loginBtn.addEventListener('click', () => {
+        loginBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // (MỚI V21) Ngăn form submit
             handleLogin(supabase, authMessage);
         });
     }
     
     if (signupBtn) {
-        signupBtn.addEventListener('click', () => {
+        signupBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // (MỚI V21) Ngăn form submit
             handleSignUp(supabase, authMessage); 
         });
     }
@@ -53,12 +52,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadBtn = document.getElementById('download-btn');
     const mixMessage = document.getElementById('mix-message');
 
+    // (MỚI V21) Lấy các element của khu vực Logo
+    const logoNoneRadio = document.getElementById('logo_none');
+    const logoCustomRadio = document.getElementById('logo_custom');
+    const logoUploadArea = document.getElementById('logo-upload-area');
+    const logoInput = document.getElementById('logo-input');
+    const uploadLogoBtn = document.getElementById('upload-logo-btn');
+    const logoSpinner = document.getElementById('logo-spinner');
+    const logoMessage = document.getElementById('logo-message');
+
+
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => handleLogout(supabase));
     }
     
     if (uploadBtn) {
-        uploadBtn.addEventListener('click', () => {
+        uploadBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // (MỚI V21) Ngăn form submit
             const file = fileInput.files[0];
             if (!file) {
                 showMessage(uploadMessage, 'Vui lòng chọn một tệp .docx', true);
@@ -78,8 +88,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     if (mixBtn) {
-        mixBtn.addEventListener('click', () => {
+        mixBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // (MỚI V21) Ngăn form submit
             handleMixRequest(supabase, mixMessage, mixBtn, downloadBtn);
         });
     }
+
+    // --- (MỚI V21) Gán sự kiện cho Khu vực Logo ---
+    function toggleLogoUploadArea() {
+        if (logoCustomRadio && logoUploadArea) {
+            logoUploadArea.style.display = logoCustomRadio.checked ? 'block' : 'none';
+        }
+    }
+    
+    if (logoNoneRadio) {
+        logoNoneRadio.addEventListener('change', toggleLogoUploadArea);
+    }
+    if (logoCustomRadio) {
+        logoCustomRadio.addEventListener('change', toggleLogoUploadArea);
+    }
+
+    if (uploadLogoBtn) {
+        uploadLogoBtn.addEventListener('click', () => {
+            const file = logoInput.files[0];
+            if (!file) {
+                showMessage(logoMessage, 'Vui lòng chọn một tệp logo .png hoặc .jpg', true);
+                return;
+            }
+            handleLogoUpload(supabase, file, logoMessage, uploadLogoBtn, logoSpinner);
+        });
+    }
+
+    // (MỚI V21) Chạy 1 lần khi tải trang
+    toggleLogoUploadArea();
 });
