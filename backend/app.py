@@ -7,18 +7,18 @@ from flask import Flask, request, jsonify, send_file, make_response
 from flask_cors import CORS
 from supabase import create_client, Client 
 
-# (FIX V24) Lấy đường dẫn tuyệt đối của thư mục script
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_LOGO_PATH = os.path.join(SCRIPT_DIR, 'logo_default.png')
+# (SỬA V26) Đổi tên import
+from docx_parser import parse_test_document
+from docx_builder import build_mixed_test_zip, create_answer_key_doc
 
-# === (FIX V23) XÓA BỎ IMPORT GÂY NẶNG MÁY ===
-# Chúng ta sẽ import chúng BÊN TRONG hàm.
+# (SỬA V26) Import file utils MỚI
+import docx_utils
 
 # --- Cấu hình ---
 app = Flask(__name__)
 CORS(app, expose_headers=['Content-Disposition'])
 
-# === (FIX V23) Quay lại logic kết nối V21 ===
+# --- Kết nối Supabase ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 supabase: Client = None 
@@ -30,7 +30,7 @@ try:
 except Exception as e:
     DATABASE_ERROR = f"Lỗi khi khởi tạo Supabase client: {e}."
     print(DATABASE_ERROR)
-# === KẾT THÚC FIX V23 ===
+# === KẾT THÚC KẾT NỐI ===
 
 
 # === API ENDPOINTS ===
@@ -39,14 +39,13 @@ except Exception as e:
 def home():
     if DATABASE_ERROR:
         return f"API ĐANG BỊ LỖI KẾT NỐI CSDL: {DATABASE_ERROR}", 500
-    # (FIX V25) Cập nhật phiên bản
-    return "Xin chào, API Backend của TronDeTN (Phiên bản V25) đang hoạt động!"
+    # (SỬA V26) Cập nhật phiên bản
+    return "Xin chào, API Backend của TronDeTN (Phiên bản V26) đang hoạt động!"
 
 @app.route('/wake', methods=['GET'])
 def handle_wake():
     if DATABASE_ERROR or supabase is None:
         return jsonify({"error": f"Lỗi CSDL: {DATABASE_ERROR}"}), 500
-        
     try:
         supabase.table('profiles').select('id', count='exact').limit(1).execute()
         return jsonify({"message": "Đã thức!"}), 200
@@ -57,41 +56,30 @@ def handle_wake():
 def get_user_id_from_token(request):
     if DATABASE_ERROR or supabase is None:
         raise Exception(f"Lỗi CSDL: {DATABASE_ERROR}")
-        
     auth_header = request.headers.get('Authorization')
     if not auth_header:
         raise Exception("Thiếu token xác thực")
-    
     jwt_token = auth_header.split(' ')[1]
     user_id = supabase.auth.get_user(jwt_token).user.id
     return user_id
 
-# === (MỚI GĐ 5.2) API LẤY KHO CÂU HỎI ===
 @app.route('/questions', methods=['GET'])
 def handle_get_questions():
     try:
         user_id = get_user_id_from_token(request)
-        
-        # Chỉ lấy 2 cột cần thiết, sắp xếp theo group_tag
         response = supabase.table('question_banks') \
                            .select('group_tag', 'question_text') \
                            .eq('user_id', user_id) \
                            .order('group_tag') \
                            .execute()
-                           
         return jsonify(response.data), 200
-        
     except Exception as e:
         print(f"Lỗi trong /questions: {e}")
         return jsonify({"error": f"Lỗi máy chủ nội bộ: {e}"}), 500
-# === KẾT THÚC GĐ 5.2 ===
 
 @app.route('/upload', methods=['POST'])
 def handle_upload():
     try:
-        # (FIX V23) Import "nặng" tại đây
-        from docx_parser import parse_test_document
-        
         user_id = get_user_id_from_token(request)
         if 'file' not in request.files: return jsonify({"error": "Không có tệp"}), 400
         file = request.files['file']
@@ -116,7 +104,6 @@ def handle_upload():
         print(f"Lỗi trong /upload: {e}")
         return jsonify({"error": f"Lỗi máy chủ nội bộ: {e}"}), 500
 
-
 @app.route('/clear', methods=['DELETE'])
 def handle_clear():
     try:
@@ -128,13 +115,10 @@ def handle_clear():
         print(f"Lỗi trong /clear: {e}")
         return jsonify({"error": f"Lỗi máy chủ nội bộ: {e}"}), 500
 
-
+# === (SỬA V26) HÀM /MIX ===
 @app.route('/mix', methods=['POST'])
 def handle_mix():
     try:
-        # (FIX V23) Import "nặng" tại đây
-        from docx_builder import build_mixed_test_zip
-        
         user_id = get_user_id_from_token(request)
         data = request.json
         num_tests = int(data.get('num_tests', 2))
@@ -145,17 +129,18 @@ def handle_mix():
         
         if logo_preference == "custom":
             try:
-                # (FIX V24) Xóa "logos/"
                 logo_data = supabase.storage.from_('logos').download(f'{user_id}')
                 print(f"Đã tìm thấy logo tùy chỉnh cho {user_id}.")
             except Exception as e:
                 print(f"Không tìm thấy logo tùy chỉnh cho {user_id}. Dùng mặc định. Lỗi: {e}")
                 try:
-                    # (FIX V24) Dùng đường dẫn tuyệt đối
+                    # (SỬA V26) Dùng đường dẫn tuyệt đối (đã bị xóa ở V23)
+                    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+                    DEFAULT_LOGO_PATH = os.path.join(SCRIPT_DIR, 'logo_default.png')
                     with open(DEFAULT_LOGO_PATH, 'rb') as f:
                         logo_data = f.read()
                 except Exception as e_file:
-                    print(f"LỖI NGHIÊM TRỌNG: Không đọc được {DEFAULT_LOGO_PATH}. Bỏ qua logo. Lỗi: {e_file}")
+                    print(f"LỖI NGHIÊM TRỌNG: Không đọc được logo_default.png. Bỏ qua logo. Lỗi: {e_file}")
                     logo_data = None
         
         try:
@@ -173,6 +158,7 @@ def handle_mix():
         except Exception as e:
             return jsonify({"error": f"Lỗi khi lấy dữ liệu từ DB: {e}"}), 500
             
+        # (SỬA V26) GỌI HÀM BUILDER (ĐÃ BỊ XÓA Ở V23)
         zip_buffer = build_mixed_test_zip(groups, num_tests, base_name, header_data, logo_data)
         
         current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
