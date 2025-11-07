@@ -3,7 +3,6 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY, createClient } from './constants.js';
 import { showMessage, populateDateOfBirth } from './ui.js';
 import { checkUserSession } from './session.js';
 import { handleLogin, handleSignUp, handleLogout } from './auth.js';
-// (SỬA V23) Import thêm fetchQuestions
 import { handleFileUpload, handleClearDatabase, handleMixRequest, handleLogoUpload, fetchQuestions } from './api.js';
 
 // --- 1. Khởi tạo Supabase ---
@@ -22,25 +21,29 @@ document.addEventListener('DOMContentLoaded', () => {
     checkUserSession(supabase); 
     populateDateOfBirth();      
 
-    // --- Gán sự kiện cho trang Đăng nhập / Đăng ký ---
-    const loginBtn = document.getElementById('login-btn');
-    const signupBtn = document.getElementById('signup-btn');
+    // --- (SỬA LỖI V29) Gán sự kiện cho trang Đăng nhập / Đăng ký ---
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
     const authMessage = document.getElementById('auth-message');
     
-    if (loginBtn) {
-        loginBtn.addEventListener('click', (e) => {
-            e.preventDefault();
+    if (loginForm) {
+        // Lắng nghe sự kiện SUBMIT (do nhấn Enter hoặc click nút)
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // Ngăn tải lại trang
             handleLogin(supabase, authMessage);
         });
     }
     
-    if (signupBtn) {
-        signupBtn.addEventListener('click', (e) => {
-            e.preventDefault();
+    if (registerForm) {
+        // Lắng nghe sự kiện SUBMIT
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // Ngăn tải lại trang
             handleSignUp(supabase, authMessage); 
         });
     }
+    // === KẾT THÚC SỬA LỖI V29 ===
 
+    
     // --- Gán sự kiện cho trang Dashboard ---
     const logoutBtn = document.getElementById('logout-btn');
     const uploadBtn = document.getElementById('upload-btn');
@@ -60,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoSpinner = document.getElementById('logo-spinner');
     const logoMessage = document.getElementById('logo-message');
 
-    // (MỚI GĐ 5.2) Tải kho câu hỏi ngay khi vào Dashboard
     if (document.getElementById('question-list')) {
         fetchQuestions(supabase);
     }
@@ -97,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- (MỚI V21) Gán sự kiện cho Khu vực Logo ---
     function toggleLogoUploadArea() {
         if (logoCustomRadio && logoUploadArea) {
             logoUploadArea.style.display = logoCustomRadio.checked ? 'block' : 'none';
@@ -115,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadLogoBtn.addEventListener('click', () => {
             const file = logoInput.files[0];
             if (!file) {
-                showMessage(logoMessage, 'Vui lòng chọn một tệp logo .png hoặc .jpg', true);
+                showMessage(logoMessage, 'V...vui lòng chọn một tệp logo .png hoặc .jpg', true);
                 return;
             }
             handleLogoUpload(supabase, file, logoMessage, uploadLogoBtn, logoSpinner);
