@@ -18,7 +18,8 @@
         <img src="logo.png" alt="Logo Trộn Đề TN" class="logo-image">
 
         <h1>Trộn Đề Trắc Nghiệm</h1>
-        <div id="auth-form">
+
+        <form id="register-form">
             <h2>Tạo tài khoản mới</h2>
             <p style="text-align: center; margin-top: -10px; margin-bottom: 20px; color: #555;">Nhanh chóng và dễ dàng.</p>
 
@@ -48,15 +49,15 @@
             <input type="password" id="confirm-password" placeholder="Xác nhận mật khẩu" required>
 
             
-            <button id="signup-btn">Đăng ký</button>
+            <button id="signup-btn" type="submit">Đăng ký</button>
             
             <p id="auth-message"></p>
 
             <p style="margin-top: 20px; text-align: center; font-size: 14px;">
                 Bạn đã có tài khoản? <a href="index.html">Đăng nhập ngay</a>
             </p>
+        </form>
         </div>
-    </div>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="app.js"></script>
