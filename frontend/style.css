@@ -272,3 +272,21 @@ select {
     color: #007bff;
     margin-right: 5px;
 }
+
+/* (MỚI V30) Style cho nút phụ (như Đổi mật khẩu) */
+.button-secondary {
+    display: inline-block;
+    background-color: #6c757d; /* Màu xám */
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+.button-secondary:hover {
+    background-color: #5a6268;
+}
