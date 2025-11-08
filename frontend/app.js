@@ -2,7 +2,8 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY, createClient } from './constants.js';
 import { showMessage, populateDateOfBirth } from './ui.js';
 import { checkUserSession } from './session.js';
-import { handleLogin, handleSignUp, handleLogout } from './auth.js';
+// (SỬA V30) Import thêm handleChangePassword
+import { handleLogin, handleSignUp, handleLogout, handleChangePassword } from './auth.js';
 import { handleFileUpload, handleClearDatabase, handleMixRequest, handleLogoUpload, fetchQuestions } from './api.js';
 
 // --- 1. Khởi tạo Supabase ---
@@ -21,32 +22,41 @@ document.addEventListener('DOMContentLoaded', () => {
     checkUserSession(supabase); 
     populateDateOfBirth();      
 
-    // --- (SỬA LỖI V29) Gán sự kiện cho trang Đăng nhập / Đăng ký ---
+    // --- Gán sự kiện cho trang Đăng nhập / Đăng ký ---
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
     const authMessage = document.getElementById('auth-message');
     
     if (loginForm) {
-        // Lắng nghe sự kiện SUBMIT (do nhấn Enter hoặc click nút)
         loginForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // Ngăn tải lại trang
+            e.preventDefault(); 
             handleLogin(supabase, authMessage);
         });
     }
     
     if (registerForm) {
-        // Lắng nghe sự kiện SUBMIT
         registerForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // Ngăn tải lại trang
+            e.preventDefault(); 
             handleSignUp(supabase, authMessage); 
         });
     }
-    // === KẾT THÚC SỬA LỖI V29 ===
+    
+    // --- (MỚI V30) Gán sự kiện cho trang Đổi Mật khẩu ---
+    const changePasswordForm = document.getElementById('change-password-form');
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // dùng authMessage (vì ID giống nhau)
+            handleChangePassword(supabase, authMessage); 
+        });
+    }
+    // === KẾT THÚC V30 ===
 
     
     // --- Gán sự kiện cho trang Dashboard ---
     const logoutBtn = document.getElementById('logout-btn');
     const uploadBtn = document.getElementById('upload-btn');
+    // ... (Toàn bộ code gán sự kiện dashboard giữ nguyên) ...
     const fileInput = document.getElementById('file-input');
     const uploadMessage = document.getElementById('upload-message');
     const uploadSpinner = document.getElementById('upload-spinner');
@@ -116,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadLogoBtn.addEventListener('click', () => {
             const file = logoInput.files[0];
             if (!file) {
-                showMessage(logoMessage, 'V...vui lòng chọn một tệp logo .png hoặc .jpg', true);
+                showMessage(logoMessage, 'Vui lòng chọn một tệp logo .png hoặc .jpg', true);
                 return;
             }
             handleLogoUpload(supabase, file, logoMessage, uploadLogoBtn, logoSpinner);
