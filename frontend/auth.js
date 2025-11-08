@@ -96,3 +96,69 @@ export async function handleLogout(supabase) {
     if (error) alert(`Lỗi đăng xuất: ${error.message}`);
     else window.location.href = 'index.html';
 }
+
+/**
+ * Xử lý Đổi mật khẩu (MỚI V30)
+ * @param {object} supabase - Đối tượng Supabase client
+ * @param {HTMLElement} msgEl - Element để hiển thị thông báo
+ */
+export async function handleChangePassword(supabase, msgEl) {
+    // 1. Lấy dữ liệu
+    const oldPassword = document.getElementById('old-password').value;
+    const newPassword = document.getElementById('new-password').value;
+    const confirmPassword = document.getElementById('confirm-new-password').value;
+
+    // 2. Kiểm tra
+    if (!oldPassword || !newPassword || !confirmPassword) {
+        showMessage(msgEl, 'Lỗi: Vui lòng điền đầy đủ cả 3 trường.', true);
+        return;
+    }
+    if (newPassword !== confirmPassword) {
+        showMessage(msgEl, 'Lỗi: Mật khẩu mới và xác nhận không khớp.', true);
+        return;
+    }
+    if (newPassword.length < 6) {
+        showMessage(msgEl, 'Lỗi: Mật khẩu mới phải có ít nhất 6 ký tự.', true);
+        return;
+    }
+
+    showMessage(msgEl, 'Đang xử lý...', false);
+
+    try {
+        // 3. (Rất quan trọng) Lấy email user hiện tại
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+            throw new Error("Phiên làm việc không hợp lệ. Vui lòng đăng nhập lại.");
+        }
+        const email = session.user.email;
+
+        // 4. Xác thực mật khẩu cũ
+        // Chúng ta phải đăng nhập lại (trong nền) để chứng minh user biết mật khẩu cũ
+        const { error: reauthError } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: oldPassword
+        });
+
+        if (reauthError) {
+            showMessage(msgEl, 'Lỗi: Mật khẩu cũ không chính xác.', true);
+            return;
+        }
+
+        // 5. Nếu mật khẩu cũ đúng, cập nhật mật khẩu mới
+        const { error: updateError } = await supabase.auth.updateUser({
+            password: newPassword
+        });
+
+        if (updateError) throw updateError;
+
+        showMessage(msgEl, 'Đổi mật khẩu thành công! Vui lòng đăng nhập lại với mật khẩu mới.', false);
+        
+        // Đăng xuất và chuyển về trang đăng nhập
+        setTimeout(() => {
+            handleLogout(supabase); 
+        }, 2000);
+
+    } catch (error) {
+        showMessage(msgEl, `Lỗi: ${error.message}`, true);
+    }
+}
