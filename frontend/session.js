@@ -47,8 +47,12 @@ export async function checkUserSession(supabase) {
         }
     } else { // Chưa đăng nhập
         // Nếu ở trang dashboard -> Đuổi về trang đăng nhập
-        if (!isAuthPage && window.location.pathname.endsWith('dashboard.html')) {
-             window.location.href = 'index.html';
-        }
+       // (SỬA V30) Liệt kê các trang cần đăng nhập
+const protectedPages = ['dashboard.html', 'change-password.html'];
+const isProtectedPage = protectedPages.some(page => window.location.pathname.endsWith(page));
+
+if (!isAuthPage && isProtectedPage) {
+     window.location.href = 'index.html';
+}
     }
 }
